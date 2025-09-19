@@ -34,6 +34,8 @@ export const translations: Record<Language, Partial<LocalizedContent>> = {
     [SubPage.PRODUCT_DESIGN]: 'Product Design',
     [SubPage.ECONOMICS]: 'Economics',
     [SubPage.SALES]: 'Sales',
+    // FIX: Add missing SubPage.LEGAL translation key
+    [SubPage.LEGAL]: 'Legal',
     [SubPage.INVESTMENT]: 'Investment',
     [SubPage.MANAGEMENT]: 'Management',
     [SubPage.CHECKLISTS]: 'Checklists',
@@ -1277,6 +1279,8 @@ export const translations: Record<Language, Partial<LocalizedContent>> = {
     [SubPage.PRODUCT_DESIGN]: 'የምርት ዲዛይን',
     [SubPage.ECONOMICS]: 'ኢኮኖሚክስ',
     [SubPage.SALES]: 'ሽያጭ',
+    // FIX: Add missing SubPage.LEGAL translation key
+    [SubPage.LEGAL]: 'ህጋዊ',
     [SubPage.INVESTMENT]: 'ኢንቨስትመንት',
     [SubPage.MANAGEMENT]: 'አስተዳደር',
     [SubPage.CHECKLISTS]: 'የማረጋገጫ ዝርዝሮች',

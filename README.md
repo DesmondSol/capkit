@@ -1,46 +1,53 @@
-### CapKit — From Idea to Investor‑Ready in One Weekend
+### CapKit
 
-CapKit is an AI‑powered startup studio in a box. It helps founders go from a fuzzy idea to investor‑ready collateral, customer insights, and an initial go‑to‑market plan—fast.
+![CapKit](https://img.shields.io/badge/CapKit-AI%20Startup%20Studio-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Build](https://img.shields.io/badge/Build-Vite%206-orange?style=flat-square)
+![Runtime](https://img.shields.io/badge/React-19-informational?style=flat-square)
 
-Think of CapKit as your co‑founder who never sleeps: it researches your market, drafts marketing assets, scaffolds product plans, forecasts economics, and packages everything into shareable PDFs you can use with teammates, advisors, or investors.
+CapKit is an AI‑powered startup studio template that helps founders move from idea to investor‑ready collateral, research, and initial go‑to‑market plans—fast.
 
----
-
-### Why this matters
-
-- **Speed to signal**: The hardest part of starting is making the invisible visible. CapKit turns loose ideas into tangible artifacts you can react to.
-- **Consistency**: Strategy, market research, product, marketing, and economics stay aligned because they’re generated from the same source of truth.
-- **Investor credibility**: You’ll produce clear collateral that looks buttoned‑up—without spending weeks in spreadsheets and slides.
+Live: `https://capkit.vercel.app`
 
 ---
 
-### What you can build with CapKit
+### Table of Contents
 
-- **Market Research Accelerator**: Summarize competitors, segment markets, and extract Jobs‑To‑Be‑Done insights.
-- **Personas & JTBD**: Generate buyer personas and job stories that connect research to product.
-- **Product Design & Planning**: Brainstorm features, prioritize with an action board, and capture feedback.
-- **Copywriting Studio**: Create pitches, one‑pagers, social posts, and full marketing strategies.
-- **Sales & GTM**: Draft go‑to‑market plans, seed a CRM pipeline, and craft outreach.
-- **Economics**: Model unit economics, burn rate, and simple projections.
-- **Mindset & Coaching**: Set goals, run assessments, and keep momentum.
-- **PDF Export**: Package output into clean PDFs for sharing.
-
-All features are modular—you can use one flow or the entire stack.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Scripts](#scripts)
+- [Project Structure](#project-structure)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Screenshots](#screenshots)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [License](#license)
 
 ---
 
-### Tech Overview
+### Features
 
-- **Frontend**: React + Vite (TypeScript)
-- **AI**: Google Gemini via `@google/genai`
-- **PDF**: `jspdf` utilities in `utils/pdfUtils.ts`
-- **i18n**: Lightweight locale support via `locales.ts`
+- **Market Research**: Competitor scans, segmentation, and JTBD insights
+- **Personas & JTBD**: Buyer personas and job stories
+- **Product Planning**: Brainstorming, feature planning, action board, feedback aggregation
+- **Copywriting**: Pitches, one‑pagers, social posts, and strategies
+- **Sales & GTM**: Go‑to‑market plans and simple CRM scaffolding
+- **Economics**: Unit economics, burn‑rate, and lightweight projections
+- **Mindset & Coaching**: Goals, assessments, and AI coach
+- **PDF Export**: Shareable PDFs via `jspdf`
 
-Key app entry points:
-- `index.tsx` bootstraps the React app
-- `App.tsx` wires navigation and top‑level layout
-- Feature modules live in `components/*`
-- AI client lives in `services/geminiService.ts`
+---
+
+### Tech Stack
+
+- React 19 + Vite 6 (TypeScript)
+- Google Gemini via `@google/genai`
+- PDF generation via `jspdf`
+- Lightweight i18n via `locales.ts`
 
 ---
 
@@ -53,8 +60,8 @@ Prerequisites: Node.js 18+
 npm install
 ```
 
-2) Configure your API key
-Create a file named `.env.local` in the project root:
+2) Configure environment
+Create `.env.local` in the project root:
 ```bash
 GEMINI_API_KEY=your_api_key_here
 ```
@@ -64,113 +71,111 @@ GEMINI_API_KEY=your_api_key_here
 npm run dev
 ```
 
-4) Open the app
-Visit `http://localhost:5173` (Vite default) in your browser.
+Open `http://localhost:5173` in your browser (Vite default).
 
 ---
 
 ### Scripts
 
-- `npm run dev`: Start local dev server
-- `npm run build`: Production build
-- `npm run preview`: Preview the production build locally
+- `npm run dev` — Start local dev server
+- `npm run build` — Production build
+- `npm run preview` — Preview the production build
+
+---
+
+### Project Structure
+
+- `App.tsx` — App shell and navigation
+- `components/*` — Feature modules (Market Research, Product, Copywriting, Sales, Economics, Mindset)
+- `services/geminiService.ts` — Centralized AI client
+- `utils/pdfUtils.ts` — PDF helpers
+- `locales.ts` — Locale strings
 
 ---
 
 ### Configuration
 
-- **Environment**
-  - `GEMINI_API_KEY`: Required for AI features (used in `services/geminiService.ts`).
-
-- **Locales**
-  - Edit `locales.ts` to add or modify languages, labels, and supported content.
+- `GEMINI_API_KEY` in `.env.local` is required for AI features.
+- Update `locales.ts` to add or modify language strings.
 
 ---
 
-### Key Features by Module
+### Development
 
-- `components/MarketResearchAccelerator/MarketResearchAccelerator.tsx`
-  - Guides structured research, competitor summaries, and insights extraction.
-
-- `components/PersonasPage/*`
-  - Generates personas, job stories, and detailed persona views.
-
-- `components/ProductDesignPage/*`
-  - Brainstorm board, feature planning, feedback aggregation, and action items.
-
-- `components/Copywriting/*`
-  - Pitch creation, one‑pager, marketing strategy, and channel‑specific posts.
-
-- `components/SalesPage/*`
-  - Go‑to‑market planner, pipeline scaffolding, and lead editing flows.
-
-- `components/EconomicsPage/*`
-  - Unit economics calculator, burn‑rate forecaster, and cost/revenue planner.
-
-- `components/Mindset/*`
-  - AI coaching, assessments, goal setting, and profile reports.
-
-- `utils/pdfUtils.ts`
-  - Helpers to export structured outputs into shareable PDFs.
+- Keep modules cohesive by feature area.
+- Prefer explicit types and descriptive names.
+- Add small, focused commits with meaningful messages.
 
 ---
 
-### Architecture Notes
+### Deployment
 
-- The UI is organized by outcomes (Market Research, Product, Copywriting, Sales, Economics, Mindset) rather than by technical primitives.
-- Each module encapsulates its own modals, planners, and pages to keep local context tight.
-- The AI layer is centralized in `services/geminiService.ts` so prompts and model configuration are easy to evolve.
+- Vercel is recommended. Build command: `npm run build`. Output directory: `dist`.
+- Ensure `GEMINI_API_KEY` is set in your Vercel Project Environment Variables.
+- Optionally add preview deployments for PRs.
 
 ---
 
-### Extending CapKit
+### Screenshots
 
-1) Add a new feature area
-- Create a folder under `components/YourArea/`
-- Add pages and modals specific to the workflow
-- Wire it in `App.tsx` navigation
+You can add images in `docs/` and reference them here.
 
-2) Add new AI prompts or models
-- Extend `services/geminiService.ts` with a typed function for your use case
-- Consume it from your component; keep UI state local and IO typed
+Example placeholders:
 
-3) Add exports
-- Use `utils/pdfUtils.ts` to create structured PDF exports for your new outputs
+![Banner](docs/banner.png)
+
+![Quickstart](docs/quickstart.gif)
+
+---
+
+### FAQ
+
+- **Why do I need a Gemini API key?**
+  AI features depend on Google Gemini via `@google/genai`.
+- **Can I use another LLM?**
+  Yes. Abstract or swap the client in `services/geminiService.ts`.
+- **How do I export PDFs?**
+  Use flows that call helpers in `utils/pdfUtils.ts`.
 
 ---
 
 ### Security & Privacy
 
-- API keys are read from `.env.local` and never committed. Do not check credentials into version control.
-- Text sent to the model may contain sensitive business context. Treat your prompts/outputs accordingly and avoid pasting secrets.
+- Never commit API keys. `.env.local` is for local development only.
+- Treat prompts and outputs as potentially sensitive business context.
 
 ---
 
-### Roadmap Ideas
+### Roadmap (suggested)
 
-- Workspace saves and versioned projects
-- Collaborative editing and comment threads
-- Data sources: web research, upload parsing
-- Multi‑model strategy and evaluation harness
+- Project workspaces and versioned saves
+- Collaborative editing and comments
+- Data sources (web, uploads) for research
+- Multi‑model strategies and evaluation
 - Theming and white‑label exports
 
 ---
 
 ### Contributing
 
-Issues and PRs are welcome. Please:
-- Keep components cohesive by feature area
-- Prefer clear types and descriptive names
-- Add small, focused commits with context in messages
+We welcome issues and PRs! For larger changes, open a discussion first.
+
+Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before submitting a PR.
+
+---
+
+### Code of Conduct
+
+By participating, you agree to uphold our [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
+
+---
+
+### Contact
+
+Questions or support: `soltigg66@gmail.com`
 
 ---
 
 ### License
 
-Proprietary – for internal or invited use unless a LICENSE file is added.
-
----
-
-### One last pitch
-
-If you’ve ever said “I’ll start when it’s clearer,” CapKit is how you make it clear. In a few focused sessions, you’ll have research, plans, and artifacts that move conversations forward—with customers and with capital.
+This project is licensed under the MIT License — see [`LICENSE`](./LICENSE) for details.

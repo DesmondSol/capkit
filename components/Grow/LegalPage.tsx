@@ -244,7 +244,6 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialData, onUpdateData,
                         {legalGrowHelp?.tools.map(({ tool }) => (
                             <li key={tool}>
                                 <a href="#" onClick={(e) => { e.preventDefault(); setActiveTool(tool as LegalTool); if(window.innerWidth < 768) setIsSidebarOpen(false); }} className={`block px-4 py-3 rounded-lg transition-colors duration-200 ${activeTool === tool ? 'bg-blue-600 text-white font-semibold' : 'hover:bg-slate-700'}`}>
-                                    {/* FIX: Cast tool to TranslationKey to resolve TypeScript error */}
                                     {t(tool as TranslationKey, tool)}
                                 </a>
                             </li>
@@ -263,7 +262,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialData, onUpdateData,
                 {activeTool === LegalTool.COMPLIANCE_MANAGEMENT && <ComplianceManagementTool legalData={initialData} onUpdateData={onUpdateData} t={t} />}
             </main>
              <FloatingActionButton icon={<HelpIcon className="h-6 w-6" />} tooltip={t('legal_help_button_tooltip')} onClick={() => setIsHelpModalOpen(true)} className="bottom-6 right-6 z-30" colorClass="bg-slate-600 hover:bg-slate-500" />
-             <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${t(activeTool)}`} size="xl">
+             {/* FIX: Cast activeTool to TranslationKey to resolve TypeScript error */}
+             <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${t(activeTool as TranslationKey)}`} size="xl">
                 <div className="prose prose-sm prose-invert max-w-none text-slate-300 whitespace-pre-line max-h-[70vh] overflow-y-auto pr-2">
                     {currentToolHelp ? t(currentToolHelp.explanationKey) : "Help not found."}
                 </div>

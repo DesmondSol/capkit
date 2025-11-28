@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { SalesData, SalesSubSection, Language, UserProfile, TranslationKey, SalesSectionHelp, CanvasData, PersonasData, MarketResearchData, LaunchPhase } from '../../types';
 import { SALES_SECTIONS_HELP } from '../../constants';
@@ -46,12 +44,17 @@ const SalesPage: React.FC<SalesPageProps> = ({
   }, []);
 
   const pageTitleObject = SALES_SECTIONS_HELP.find(s => s.title === activeSubSection);
-  // FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error
-  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection, activeSubSection);
+  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection as TranslationKey, activeSubSection);
 
   const handleExportAll = async () => {
     const { default: jsPDF } = await import('jspdf');
+    // @ts-ignore
+    const { autoTable } = await import('jspdf-autotable');
+    
     const doc = new jsPDF();
+    // FIX: 'doc' must be declared before use. Moved this line after doc initialization.
+    (doc as any).autoTable = autoTable;
+
     const yRef = { value: MARGIN_MM };
     let totalPagesRef = { current: doc.getNumberOfPages() };
 
@@ -211,7 +214,6 @@ const SalesPage: React.FC<SalesPageProps> = ({
                       : 'hover:bg-slate-700 hover:text-slate-100'
                     }`}
                 >
-                  {/* FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error */}
                   {t(sectionHelp.sidebarTitle[language] as TranslationKey, sectionHelp.title)}
                 </a>
               </li>
@@ -255,7 +257,6 @@ const SalesPage: React.FC<SalesPageProps> = ({
       <Modal
         isOpen={isHelpModalOpen}
         onClose={() => setIsHelpModalOpen(false)}
-        // FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error
         title={`${t('mra_help_modal_title_prefix')}: ${t(currentHelpContent.sidebarTitle[language] as TranslationKey, currentHelpContent.title)}`}
         size="xl"
       >

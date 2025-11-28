@@ -108,7 +108,7 @@ const StrategyPage: React.FC<StrategyPageProps> = ({
                       : 'hover:bg-slate-700 hover:text-slate-100'
                     }`}
                 >
-                  {t(sectionHelp.sidebarTitle[language] as TranslationKey, sectionHelp.title)}
+                  {t(sectionHelp.sidebarTitle[language], sectionHelp.title)}
                 </a>
               </li>
             ))}

@@ -1,0 +1,193 @@
+@import url('https://rsms.me/inter/inter.css');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for webkit browsers - Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+  /* slate-900 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  /* slate-700 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+  /* slate-600 */
+}
+
+html, body {
+  font-family: 'Inter', sans-serif;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+
+@supports (font-variation-settings: normal) {
+  html {
+    font-family: 'Inter var', sans-serif;
+  }
+}
+
+.scroll-mt-24 {
+    scroll-margin-top: 6rem; /* 96px */
+}
+
+/* --- Pre-React Loader Styles --- */
+.loader-container {
+  position: fixed;
+  inset: 0;
+  background-color: #073B4C;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: #cbd5e1;
+  /* slate-300 */
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loader-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-left-color: #06D6A0;
+  /* green accent */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.loader-quote {
+  font-style: italic;
+  max-width: 80%;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #94a3b8;
+  /* slate-400 */
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- New Landing Page Styles --- */
+:root {
+  /* Mapping new design variables to existing brand colors */
+  /* Background: #073B4C */
+  --background: 200 85% 16%; /* HSL approximation */
+  --foreground: 210 40% 98%;
+  
+  --card: 200 85% 18%;
+  --card-foreground: 210 40% 98%;
+  
+  --popover: 200 85% 16%;
+  --popover-foreground: 210 40% 98%;
+  
+  /* Primary: #118AB2 */
+  --primary: 195 80% 38%;
+  --primary-foreground: 210 40% 98%;
+  
+  /* Secondary: #06D6A0 */
+  --secondary: 164 91% 43%;
+  --secondary-foreground: 210 40% 98%;
+  
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  
+  --accent: 195 80% 38%;
+  --accent-foreground: 210 40% 98%;
+  
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 195 80% 38%;
+  
+  --radius: 0.75rem;
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(17, 138, 178, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(17, 138, 178, 0.6); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes border-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-border-flow {
+  background-size: 200% 100%;
+  animation: border-flow 3s linear infinite;
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #118AB2 0%, #06D6A0 50%, #FFD166 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.grid-pattern {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Utility classes mapping for standard Tailwind if config is not available */
+.bg-background { background-color: #073B4C; }
+.text-foreground { color: #f8fafc; }
+.text-muted-foreground { color: #94a3b8; }
+.border-border { border-color: #1e293b; }
+.bg-primary { background-color: #118AB2; }
+.text-primary { color: #118AB2; }
+.text-primary-foreground { color: #ffffff; }
+.bg-secondary { background-color: #06D6A0; }
+.hover\:bg-secondary:hover { background-color: #06D6A0; }

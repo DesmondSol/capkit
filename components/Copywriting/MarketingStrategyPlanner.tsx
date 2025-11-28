@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { 
     CopywritingData, 
@@ -15,7 +12,6 @@ import {
 import { Button } from '../common/Button';
 import { MarketingStrategyModal } from './MarketingStrategyModal';
 import { AiMarketingStrategyModal } from './AiMarketingStrategyModal';
-// FIX: The function name was incorrect. It should be generateMarketingStrategy, which is now added to geminiService.
 import { generateMarketingStrategy } from '../../services/geminiService';
 import { GENERIC_ERROR_MESSAGE } from '../../constants';
 

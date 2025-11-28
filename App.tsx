@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { BusinessLaunchCanvas } from './components/BusinessLaunchCanvas/BusinessLaunchCanvas';
@@ -61,6 +60,7 @@ const initialCopywritingData: CopywritingData = {
     ask: '',
     generatedBlurb: '',
   },
+  landingPageHtml: '',
 };
 
 const initialMindsetData: MindsetData = {
@@ -222,7 +222,8 @@ const App: React.FC = () => {
           marketingStrategies: parsed.marketingStrategies || [], 
           marketingPosts: parsed.marketingPosts || [], 
           pitches: parsed.pitches || [],
-          onePager: parsed.onePager || initialCopywritingData.onePager
+          onePager: parsed.onePager || initialCopywritingData.onePager,
+          landingPageHtml: parsed.landingPageHtml || '',
         };
       } catch (e) { console.error("Failed to parse copywritingData from localStorage", e); }
     }
@@ -368,7 +369,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (activePage === null || (activePage !== null && activeSubPage === null)) {
-      return <InfographicPage language={currentLanguage} t={t} />;
+      return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
     
     const hasAccess = auth.isLoggedIn && (auth.accessLevel === 'full' || (activePage === Page.START && activeSubPage === SubPage.MINDSET));
@@ -378,7 +379,7 @@ const App: React.FC = () => {
     }
     
     if (!auth.isLoggedIn) {
-      return <InfographicPage language={currentLanguage} t={t} />;
+      return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
 
     switch (activePage) {
@@ -388,14 +389,14 @@ const App: React.FC = () => {
           case SubPage.STRATEGY: return <StrategyPage canvasData={canvasData} onSaveCanvasSection={(section, content) => setCanvasData(prev => ({...prev, [section]: content}))} onMassUpdateCanvas={(newData) => setCanvasData(prev => ({...prev, ...newData}))} personasData={personasData} onUpdatePersonasData={setPersonasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.RESEARCH: return <MarketResearchAccelerator initialData={marketResearchData} onUpdateData={setMarketResearchData} strategyData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.COPYWRITING: return <CopywritingPage initialData={copywritingData} onUpdateData={setCopywritingData} strategyData={canvasData} researchData={marketResearchData} personasData={personasData} language={currentLanguage} t={t} userProfile={userProfile} />;
-          default: return <InfographicPage language={currentLanguage} t={t} />;
+          default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.BUILD:
         switch(activeSubPage) {
           case SubPage.PRODUCT_DESIGN: return <ProductDesignPage initialData={productDesignData} onUpdateData={setProductDesignData} canvasData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.ECONOMICS: return <EconomicsPage initialData={economicsData} onUpdateData={setEconomicsData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.SALES: return <SalesPage initialData={salesData} onUpdateData={setSalesData} canvasData={canvasData} personasData={personasData} researchData={marketResearchData} language={currentLanguage} t={t} userProfile={userProfile} />;
-          default: return <InfographicPage language={currentLanguage} t={t} />;
+          default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.GROW:
         switch(activeSubPage) {
@@ -403,10 +404,10 @@ const App: React.FC = () => {
           case SubPage.INVESTMENT: return <InvestmentPage initialData={growData.investment} onUpdateData={d => setGrowData(p => ({...p, investment: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.MANAGEMENT: return <ManagementPage initialData={growData.management} onUpdateData={d => setGrowData(p => ({...p, management: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.CHECKLISTS: return <ChecklistsPage initialData={growData.checklists} onUpdateData={d => setGrowData(p => ({...p, checklists: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          default: return <InfographicPage language={currentLanguage} t={t} />;
+          default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       default:
-        return <InfographicPage language={currentLanguage} t={t} />;
+        return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
   };
 

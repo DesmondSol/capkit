@@ -73,6 +73,14 @@ export const COPYWRITING_SECTIONS_HELP: CopywritingSectionHelp[] = [
         en: 'Create a concise one-page summary of your business for investors and stakeholders.',
         am: 'ለባለሀብቶች እና ባለድርሻ አካላት የንግድዎን አጭር የአንድ ገጽ ማጠቃለያ ይፍጠሩ።'
     }
+  },
+  {
+    title: CopywritingSubSection.LANDING_PAGE_BUILDER,
+    sidebarTitle: { en: 'sidebar_copywriting_landing_page', am: 'sidebar_copywriting_landing_page' },
+    explanation: {
+        en: 'Use AI to instantly generate a complete, single-file HTML landing page for your business based on your Business Launch Canvas data. You can copy the code or download it as an .html file.',
+        am: 'በቢዝነስ ማስጀመሪያ ሸራ መረጃዎ ላይ በመመስረት ለንግድዎ የተሟላ፣ ባለአንድ-ፋይል HTML ላንዲንግ ገጽ በፍጥነት ለማመንጨት AI ይጠቀሙ። ኮዱን መቅዳት ወይም እንደ .html ፋይል ማውረድ ይችላሉ።'
+    }
   }
 ];
 
@@ -92,6 +100,7 @@ export const TRAINERS_DATA: Trainer[] = [
 export const TESTIMONIALS_DATA: Testimonial[] = [
   { id: 'test1', authorName: 'Abebe G.', authorTitle: 'Founder, Sheba Fresh', photoUrl: 'https://randomuser.me/api/portraits/men/32.jpg', quote: 'The Business Canvas tool was a game-changer for us. It forced us to think critically about every aspect of our model and identify weaknesses we hadn\'t seen.' },
   { id: 'test2', authorName: 'Fatuma H.', authorTitle: 'CEO, Kafa Coffee Tech', photoUrl: 'https://randomuser.me/api/portraits/women/44.jpg', quote: 'The Market Research module saved us weeks of work. The AI-generated questions were incredibly insightful and helped us truly understand our customers in Addis.' },
+  // FIX: Changed 'name' property to 'authorName' to match the Testimonial type.
   { id: 'test3', authorName: 'Yared M.', authorTitle: 'CTO, Tana Deliveries', photoUrl: 'https://randomuser.me/api/portraits/men/36.jpg', quote: 'As a technical founder, the Mindset assessment was surprisingly valuable. It highlighted my strengths and showed me the kind of co-founder I needed to succeed.' },
   { id: 'test4', authorName: 'Tigist B.', authorTitle: 'Co-founder, Injera Labs', photoUrl: 'https://randomuser.me/api/portraits/women/50.jpg', quote: '7set Spark provided the structure and tools we needed to go from a simple idea to a fundable business plan. The platform is an essential co-pilot for any Ethiopian entrepreneur.' }
 ];

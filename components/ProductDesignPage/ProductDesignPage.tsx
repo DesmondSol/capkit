@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 import { ProductDesignData, ProductDesignSubSection, Language, UserProfile, TranslationKey, ProductDesignSectionHelp, CanvasData, ProductFeature } from '../../types';
 import { PRODUCT_DESIGN_SECTIONS_HELP } from '../../constants';
@@ -46,8 +47,7 @@ const ProductDesignPage: React.FC<ProductDesignPageProps> = ({
   }, []);
 
   const pageTitleObject = PRODUCT_DESIGN_SECTIONS_HELP.find(s => s.title === activeSubSection);
-  // FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error
-  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection, activeSubSection);
+  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection as TranslationKey, activeSubSection);
 
   const handleExportAll = async () => {
     const { default: jsPDF } = await import('jspdf');
@@ -219,7 +219,7 @@ const ProductDesignPage: React.FC<ProductDesignPageProps> = ({
           setIsAiModalOpen={setIsFeedbackAiModalOpen}
         />;
       default:
-        return <ComingSoon featureName={t(activeSubSection, activeSubSection)} language={language} t={t} />;
+        return <ComingSoon featureName={t(activeSubSection as TranslationKey, activeSubSection)} language={language} t={t} />;
     }
   };
 

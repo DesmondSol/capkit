@@ -5,7 +5,7 @@ import {
     ResearchSection, 
     ResearchQuestionItem, 
     ResearchSectionHelp,
-    CompetitorProfile,
+    CompetitorProfile, 
     TrendEntry,
     CanvasData,
     CanvasSection, 
@@ -14,7 +14,7 @@ import {
     UserProfile,
     TranslationKey
 } from '../../types';
-import { RESEARCH_SECTIONS_HELP, GENERIC_ERROR_MESSAGE } from '../../constants';
+import { RESEARCH_SECTIONS_HELP } from '../../constants';
 import { generateMarketResearchQuestions, generateMarketResearchSummary } from '../../services/geminiService';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
@@ -67,7 +67,7 @@ const ResearchQuestionCard: React.FC<ResearchQuestionCardProps> = ({
               rows={2}
             />
             <Button size="sm" onClick={handleSaveQuestion} className="mt-2 mr-2">{t('save_button', 'Save Q')}</Button>
-            <Button size="sm" variant="outline" onClick={() => {setIsEditingQuestion(false); setEditText(item.text);}} className="mt-2">{t('cancel_button')}</Button>
+            <Button size="sm" variant="outline" onClick={() => {setIsEditingQuestion(false); setEditText(item.text);}} className="mt-2">{t('cancel_button', 'Cancel')}</Button>
           </div>
         ) : (
           <p className="text-slate-200 font-medium flex-grow mr-2 text-sm whitespace-pre-wrap">{item.text}</p>
@@ -534,13 +534,13 @@ export const MarketResearchAccelerator: React.FC<MarketResearchAcceleratorProps>
     const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     const yRef = { value: MARGIN_MM };
-    const totalPagesRef = { current: doc.getNumberOfPages() };
+    let totalPagesRef = { current: doc.getNumberOfPages() };
 
     addUserProfileHeader(doc, userProfile, yRef, totalPagesRef, t);
 
     const activeSectionHelp = RESEARCH_SECTIONS_HELP.find(h => h.title === activeResearchSection);
-    const translatedSectionTitleForFileName = activeSectionHelp ? t(activeSectionHelp.sidebarTitle[language] as TranslationKey, activeResearchSection) : activeResearchSection;
-    const translatedSectionTitleForDisplay = activeSectionHelp ? t(activeSectionHelp.sidebarTitle[language] as TranslationKey, activeResearchSection) : t(activeResearchSection as TranslationKey, activeResearchSection);
+    const translatedSectionTitleForFileName = activeSectionHelp ? t(activeSectionHelp.sidebarTitle[language], activeResearchSection) : activeResearchSection;
+    const translatedSectionTitleForDisplay = activeSectionHelp ? t(activeSectionHelp.sidebarTitle[language], activeResearchSection) : t(activeResearchSection, activeResearchSection);
 
     doc.setFontSize(TITLE_FONT_SIZE);
     doc.setFont("helvetica", "bold");
@@ -658,7 +658,7 @@ export const MarketResearchAccelerator: React.FC<MarketResearchAcceleratorProps>
       if(activeResearchSection !== ResearchSection.QUESTIONS) setError(null);
     }
     const currentSectionHelp = RESEARCH_SECTIONS_HELP.find(h => h.title === activeResearchSection);
-    const translatedSectionTitle = currentSectionHelp ? t(currentSectionHelp.sidebarTitle[language] as TranslationKey, activeResearchSection) : t(activeResearchSection as TranslationKey, activeResearchSection);
+    const translatedSectionTitle = currentSectionHelp ? t(currentSectionHelp.sidebarTitle[language], activeResearchSection) : t(activeResearchSection, activeResearchSection);
 
 
     switch (activeResearchSection) {
@@ -821,27 +821,37 @@ export const MarketResearchAccelerator: React.FC<MarketResearchAcceleratorProps>
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-blue-400">{translatedSectionTitle}</h3>
-            {error && <p className="text-red-400 bg-red-900/30 p-3 rounded-lg mb-4 text-sm">{error}</p>}
-            <Button onClick={() => {handleGenerateSummary(); setError(null);}} disabled={isLoadingAi} variant="primary" size="lg" leftIcon={<SparklesIcon className="h-5 w-5"/>}>
-              {isLoadingAi ? (<><SpinnerIcon className="h-5 w-5 mr-2" /> {t('mra_ai_summary_generating_button')}</>) : t('mra_ai_summary_generate_button')}
-            </Button>
-            <div className="bg-slate-800 p-6 rounded-xl shadow-lg min-h-[250px] whitespace-pre-wrap text-slate-300 border border-slate-700 prose prose-sm prose-invert max-w-none">
-              {isLoadingAi && !initialData[ResearchSection.AI_SUMMARY] ? <div className="flex justify-center items-center h-full"><SpinnerIcon className="h-10 w-10 text-blue-500" /></div> : (initialData[ResearchSection.AI_SUMMARY] || <span className="italic text-slate-500">{t('mra_ai_summary_placeholder')}</span>)}
+            <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+              <div className="flex justify-between items-start mb-4">
+                 <p className="text-sm text-slate-400 max-w-3xl">{language === 'am' ? 'በሌሎች ክፍሎች ውስጥ በሰበሰቡት መረጃ ላይ በመመስረት፣ AI አጠቃላይ ማጠቃለያ ያዘጋጃል።' : 'Based on the data you collected in other sections, the AI will generate a comprehensive summary.'}</p>
+                 <Button onClick={handleGenerateSummary} disabled={isLoadingAi} leftIcon={isLoadingAi ? <SpinnerIcon className="h-5 w-5"/> : <SparklesIcon className="h-5 w-5"/>}>
+                    {isLoadingAi ? t('mra_ai_summary_generating_button') : t('mra_ai_summary_generate_button')}
+                 </Button>
+              </div>
+              {error && <p className="text-red-400 bg-red-900/30 p-3 rounded-lg mb-4 text-sm">{error}</p>}
+              <textarea
+                value={initialData[ResearchSection.AI_SUMMARY]}
+                onChange={(e) => onUpdateData({ ...initialData, [ResearchSection.AI_SUMMARY]: e.target.value })}
+                rows={15}
+                className="w-full p-4 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-inner placeholder-slate-600"
+                placeholder={t('mra_ai_summary_placeholder')}
+              />
             </div>
           </div>
         );
-      default: return <p className="text-slate-400">Select a section from the sidebar.</p>;
+      default:
+        return <p>Select a section</p>;
     }
   };
 
   return (
     <div className="flex flex-col md:flex-row h-full md:h-[calc(100vh-8rem-2rem)] relative bg-transparent">
       <aside 
-         className={`
-           fixed top-20 right-0 w-full h-[calc(100vh-5rem)] bg-slate-800 z-40 p-6 overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out
-           ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
-           md:static md:w-[320px] md:h-full md:translate-x-0 md:z-auto md:border-r md:border-slate-700 md:shadow-none md:transition-none md:left-auto md:right-auto md:top-auto
-         `}
+        className={`
+          fixed top-20 right-0 w-full h-[calc(100vh-5rem)] bg-slate-800 z-40 p-6 overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+          md:static md:w-[320px] md:h-full md:translate-x-0 md:z-auto md:border-r md:border-slate-700 md:shadow-none md:transition-none md:left-auto md:right-auto md:top-auto
+        `}
       >
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-xl font-semibold text-slate-100">{t('mra_sidebar_title')}</h3>
@@ -851,82 +861,78 @@ export const MarketResearchAccelerator: React.FC<MarketResearchAcceleratorProps>
         </div>
         <nav>
           <ul className="space-y-2">
-            {Object.values(ResearchSection).map(section => {
-              const helpInfo = RESEARCH_SECTIONS_HELP.find(h => h.title === section);
-              const sidebarTitle = helpInfo ? t(helpInfo.sidebarTitle[language] as TranslationKey, section) : t(section as TranslationKey, section);
-              return (
-                <li key={section}>
-                  <a
-                    href="#"
-                    onClick={(e) => { 
-                      e.preventDefault(); 
-                      setActiveResearchSection(section);
-                      setCurrentHelpContent(helpInfo || {title: section, sidebarTitle: {[language]:t(section as TranslationKey, section)} as any, explanation: {en: "Error", am: "ስህተት"}});
-                      setEditingCompetitorId(null); 
-                      setEditingTrendId(null);    
-                      if(window.innerWidth < 768 && isSidebarOpen) setIsSidebarOpen(false);
-                    }}
-                    className={`block px-4 py-3 rounded-lg transition-colors duration-200
-                      ${activeResearchSection === section 
-                        ? 'bg-blue-600 text-white font-semibold shadow-md' 
-                        : 'hover:bg-slate-700 hover:text-slate-100'
-                      }`}
-                  >
-                    {sidebarTitle}
-                  </a>
-                </li>
-              );
-            })}
+            {RESEARCH_SECTIONS_HELP.map(sectionHelp => (
+              <li key={sectionHelp.title}>
+                <a
+                  href="#"
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    setActiveResearchSection(sectionHelp.title);
+                    if (window.innerWidth < 768) {
+                        setIsSidebarOpen(false);
+                    }
+                  }}
+                  className={`block px-4 py-3 rounded-lg transition-colors duration-200
+                    ${activeResearchSection === sectionHelp.title 
+                      ? 'bg-blue-600 text-white font-semibold shadow-md' 
+                      : 'hover:bg-slate-700 hover:text-slate-100'
+                    }`}
+                >
+                  {t(sectionHelp.sidebarTitle[language], sectionHelp.title)}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
+        <div className="mt-8 pt-6 border-t border-slate-700">
+             <Button onClick={handleExport} variant="secondary" className="w-full">{t('export_current_view_button')}</Button>
+        </div>
       </aside>
 
-      <main className={`flex-grow p-4 md:p-8 bg-transparent shadow-inner overflow-y-auto ${isSidebarOpen && 'md:ml-0'}`}>
-         <div className="flex justify-between items-center mb-8">
+      <main className="flex-grow p-4 md:p-8 bg-transparent shadow-inner overflow-y-auto">
+        <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-slate-100">{t('market_research_accelerator_page_title')}</h2>
-            <div className="flex items-center space-x-3">
-                <Button onClick={handleExport} variant="primary" leftIcon={<DownloadIcon className="h-5 w-5"/>}>{t('export_current_view_button')}</Button>
-                <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
-                    {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
-                </Button>
-            </div>
-         </div>
-         {renderSectionContent()}
+            <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
+                {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            </Button>
+        </div>
+        {renderSectionContent()}
       </main>
-
-       <FloatingActionButton
+      
+      <FloatingActionButton
         icon={<HelpIcon className="h-6 w-6" />}
         tooltip={t('help_mra_button_tooltip')}
         onClick={() => openHelpModalForSection(activeResearchSection)}
-        className="bottom-6 right-6 z-30" 
+        className="bottom-6 right-6 z-30"
         colorClass="bg-slate-600 hover:bg-slate-500"
-        size="md" 
+        size="md"
       />
 
-      <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${currentHelpContent?.sidebarTitle[language] || currentHelpContent?.title || ''}`} size="xl">
+      <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${t((currentHelpContent?.sidebarTitle[language] as TranslationKey) || 'mra_sidebar_title')}`} size="xl">
         <div className="prose prose-sm prose-invert max-w-none text-slate-300 whitespace-pre-line max-h-[70vh] overflow-y-auto pr-2">
-            {currentHelpContent?.explanation[language] || currentHelpContent?.explanation.en}
+            {currentHelpContent?.explanation[language]}
         </div>
       </Modal>
 
-      <Modal isOpen={isCreateSetModalOpen} onClose={() => {setIsCreateSetModalOpen(false); setError(null); setNewSetForm({name: '', researchGoal: '', targetAudience: ''})}} title={t('mra_create_set_modal_title')} size="lg">
-        {error && <p className="text-red-400 bg-red-900/30 p-3 rounded-lg mb-4 text-sm">{error}</p>}
-        <div className="space-y-5">
-          <div>
-            <label htmlFor="setName" className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_name_label')}</label>
-            <input type="text" id="setName" value={newSetForm.name} onChange={(e) => setNewSetForm(prev => ({...prev, name: e.target.value}))} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={language==='am'? 'ለምሳሌ፣ የቅድመ ተጠቃሚ አስተያየት':'e.g., Early Adopter Feedback'}/>
-          </div>
-          <div>
-            <label htmlFor="setGoal" className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_goal_label')}</label>
-            <textarea id="setGoal" rows={2} value={newSetForm.researchGoal} onChange={(e) => setNewSetForm(prev => ({...prev, researchGoal: e.target.value}))} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={language==='am' ? 'ለምሳሌ፣ ለዋና ባህሪ X ያለውን ፍላጎት ማረጋገጥ' : "e.g., Validate demand for core feature X"}/>
-          </div>
-           <div>
-            <label htmlFor="setAudience" className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_audience_label')}</label>
-            <input type="text" id="setAudience" value={newSetForm.targetAudience} onChange={(e) => setNewSetForm(prev => ({...prev, targetAudience: e.target.value}))} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={language === 'am' ? 'ለምሳሌ፣ በቴክኖሎጂ የተካኑ አነስተኛ የንግድ ባለቤቶች' : "e.g., Tech-savvy small business owners"}/>
-          </div>
-          <Button onClick={handleCreateNewQuestionnaireSet} className="w-full mt-2" variant="primary" size="lg">
-            {t('mra_create_set_button')}
-          </Button>
+      <Modal isOpen={isCreateSetModalOpen} onClose={() => setIsCreateSetModalOpen(false)} title={t('mra_create_set_modal_title')}>
+        <div className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_name_label')}</label>
+                <input type="text" value={newSetForm.name} onChange={(e) => setNewSetForm({...newSetForm, name: e.target.value})} className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200" placeholder="e.g. Initial Validation" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_goal_label')}</label>
+                <input type="text" value={newSetForm.researchGoal} onChange={(e) => setNewSetForm({...newSetForm, researchGoal: e.target.value})} className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200" placeholder="e.g. To validate pricing..." />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">{t('mra_create_set_audience_label')}</label>
+                <input type="text" value={newSetForm.targetAudience} onChange={(e) => setNewSetForm({...newSetForm, targetAudience: e.target.value})} className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-slate-200" placeholder="e.g. University Students in Addis" />
+            </div>
+            {error && <p className="text-red-400 text-sm">{error}</p>}
+            <div className="flex justify-end space-x-2 pt-2">
+                <Button variant="outline" onClick={() => setIsCreateSetModalOpen(false)}>{t('cancel_button')}</Button>
+                <Button variant="primary" onClick={handleCreateNewQuestionnaireSet}>{t('mra_create_set_button')}</Button>
+            </div>
         </div>
       </Modal>
     </div>
@@ -934,6 +940,24 @@ export const MarketResearchAccelerator: React.FC<MarketResearchAcceleratorProps>
 };
 
 // --- SVG Icons ---
+const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const HelpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+  </svg>
+);
+
+const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
+    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+  </svg>
+);
+
 const PencilIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
     <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
@@ -944,12 +968,6 @@ const PencilIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 const TrashIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
     <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25-.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-  </svg>
-);
-
-const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}>
-    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
   </svg>
 );
 
@@ -966,26 +984,10 @@ const SpinnerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
-const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-  </svg>
-);
-
-const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const HelpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-  </svg>
-);
-
 const MenuIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
   </svg>
 );
+
+export default MarketResearchAccelerator;

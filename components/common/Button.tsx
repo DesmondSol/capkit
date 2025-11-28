@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { ButtonHTMLAttributes } from 'react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -24,6 +24,7 @@ export const Button: React.FC<ButtonProps> = ({
     secondary: 'bg-slate-600 hover:bg-slate-500 text-slate-100 focus:ring-slate-500',
     danger: 'bg-[#FF6B6B] hover:bg-[#fa5252] text-white focus:ring-[#FF6B6B]', // Infographic Coral
     outline: 'bg-transparent hover:bg-slate-700 text-slate-300 border border-slate-600 hover:border-slate-500 focus:ring-blue-500',
+    ghost: 'bg-transparent hover:bg-slate-700/50 text-slate-300 hover:text-white shadow-none',
   };
 
   const sizeStyles = {

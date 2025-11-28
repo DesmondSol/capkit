@@ -16,6 +16,7 @@ import { MarketingPlanner } from './Copywriting/MarketingPlanner';
 import { PitchRefiner } from './Copywriting/PitchRefiner';
 import { MarketingStrategyPlanner } from './Copywriting/MarketingStrategyPlanner';
 import { InvestorOnePager } from './Copywriting/InvestorOnePager';
+import { LandingPageBuilder } from './Copywriting/LandingPageBuilder';
 import { FloatingActionButton } from './common/FloatingActionButton'; 
 import { Modal } from './common/Modal'; 
 import { Button } from './common/Button'; 
@@ -54,7 +55,7 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
   }, []);
 
   const currentHelpContent = COPYWRITING_SECTIONS_HELP.find(h => h.title === activeSubSection) || COPYWRITING_SECTIONS_HELP[0];
-  const pageTitle = currentHelpContent ? t(currentHelpContent.sidebarTitle[language] as TranslationKey, activeSubSection) : t(activeSubSection as TranslationKey, activeSubSection);
+  const pageTitle = currentHelpContent ? t(currentHelpContent.sidebarTitle[language], activeSubSection) : t(activeSubSection as TranslationKey, activeSubSection);
 
   const handleSubSectionSelect = (subSection: CopywritingSubSection) => {
     setActiveSubSection(subSection);
@@ -117,6 +118,17 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
             triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.ONE_PAGER_SUMMARY}
             resetAiTrigger={() => setIsAiModalTriggered(false)}
         />
+      case CopywritingSubSection.LANDING_PAGE_BUILDER:
+        return <LandingPageBuilder
+            copywritingData={initialData}
+            onUpdateData={onUpdateData}
+            strategyData={strategyData}
+            language={language}
+            t={t}
+            userProfile={userProfile}
+            triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.LANDING_PAGE_BUILDER}
+            resetAiTrigger={() => setIsAiModalTriggered(false)}
+        />
       default:
         return null;
     }
@@ -141,7 +153,7 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
         <nav>
           <ul className="space-y-2">
             {COPYWRITING_SECTIONS_HELP.map(sectionHelp => {
-              const sidebarTitle = t(sectionHelp.sidebarTitle[language] as TranslationKey, sectionHelp.title);
+              const sidebarTitle = t(sectionHelp.sidebarTitle[language], sectionHelp.title);
               return (
                 <li key={sectionHelp.title}>
                   <a

@@ -23,7 +23,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ isOpen, onClose, onLoginSucc
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    const users: UserAuthData[] = JSON.parse(localStorage.getItem('sparkUsers') || '[]');
+    // FIX: Use 'capkitUsers' to match the key used in App.tsx
+    const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
     if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
       setError(t('auth_error_email_exists'));
       return;
@@ -37,13 +38,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ isOpen, onClose, onLoginSucc
     };
 
     users.push(newUser);
-    localStorage.setItem('sparkUsers', JSON.stringify(users));
+    // FIX: Use 'capkitUsers' to match the key used in App.tsx
+    localStorage.setItem('capkitUsers', JSON.stringify(users));
     onLoginSuccess(newUser.email, newUser.accessLevel);
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const users: UserAuthData[] = JSON.parse(localStorage.getItem('sparkUsers') || '[]');
+    // FIX: Use 'capkitUsers' to match the key used in App.tsx
+    const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
     if (user) {
       onLoginSuccess(user.email, user.accessLevel);

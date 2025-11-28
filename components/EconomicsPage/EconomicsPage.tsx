@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { EconomicsData, EconomicsSubSection, Language, UserProfile, TranslationKey, EconomicsSectionHelp } from '../../types';
 import { ECONOMICS_SECTIONS_HELP } from '../../constants';
@@ -39,12 +37,17 @@ const EconomicsPage: React.FC<EconomicsPageProps> = ({
   }, []);
 
   const pageTitleObject = ECONOMICS_SECTIONS_HELP.find(s => s.title === activeSubSection);
-  // FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error
-  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection, activeSubSection);
+  const pageTitle = pageTitleObject ? t(pageTitleObject.sidebarTitle[language] as TranslationKey, pageTitleObject.title) : t(activeSubSection as TranslationKey, activeSubSection);
 
   const handleExportAll = async () => {
     const { default: jsPDF } = await import('jspdf');
+    // @ts-ignore
+    const { autoTable } = await import('jspdf-autotable');
+    
     const doc = new jsPDF();
+    // FIX: 'doc' must be declared before use. Moved this line after doc initialization.
+    (doc as any).autoTable = autoTable;
+
     const yRef = { value: MARGIN_MM };
     let totalPagesRef = { current: doc.getNumberOfPages() };
     
@@ -155,7 +158,7 @@ const EconomicsPage: React.FC<EconomicsPageProps> = ({
       case EconomicsSubSection.FINANCIAL_PROJECTION:
         return <FinancialProjectionGenerator economicsData={initialData} onUpdateData={onUpdateData} t={t} language={language} />;
       default:
-        return <ComingSoon featureName={t(activeSubSection, activeSubSection)} language={language} t={t} />;
+        return <ComingSoon featureName={t(activeSubSection as TranslationKey, activeSubSection)} language={language} t={t} />;
     }
   };
 
@@ -187,7 +190,6 @@ const EconomicsPage: React.FC<EconomicsPageProps> = ({
                       : 'hover:bg-slate-700 hover:text-slate-100'
                     }`}
                 >
-                  {/* FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error */}
                   {t(sectionHelp.sidebarTitle[language] as TranslationKey, sectionHelp.title)}
                 </a>
               </li>
@@ -221,7 +223,6 @@ const EconomicsPage: React.FC<EconomicsPageProps> = ({
       <Modal
         isOpen={isHelpModalOpen}
         onClose={() => setIsHelpModalOpen(false)}
-        // FIX: Cast sidebarTitle to TranslationKey to resolve TypeScript error
         title={`${t('mra_help_modal_title_prefix')}: ${t(currentHelpContent.sidebarTitle[language] as TranslationKey, currentHelpContent.title)}`}
         size="xl"
       >

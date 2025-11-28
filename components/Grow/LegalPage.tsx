@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { GrowData, LegalTool, Language, UserProfile, TranslationKey, LegalDocument, LegalDocumentType, ComplianceItem, ComplianceStatus, GrowSection } from '../../types';
 import { GROW_SECTIONS_HELP } from '../../constants';
@@ -7,6 +6,7 @@ import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
 import { FloatingActionButton } from '../common/FloatingActionButton';
 import { generateLegalDocument } from '../../services/geminiService';
+import { addUserProfileHeader, addPageFooter, addTextWithPageBreaks, MARGIN_MM, LINE_HEIGHT_NORMAL, TITLE_FONT_SIZE, LINE_HEIGHT_TITLE, SECTION_TITLE_FONT_SIZE, LINE_HEIGHT_SECTION_TITLE, TEXT_FONT_SIZE } from '../../utils/pdfUtils';
 
 interface LegalPageProps {
   initialData: GrowData['legal'];
@@ -81,7 +81,7 @@ const DocumentAutomationTool: React.FC<{
         { value: 'employment-contract', labelKey: 'legal_doc_type_emp' },
     ];
     
-    const getFieldsForDocType = (type: LegalDocumentType | '') => {
+    const getFieldsForDocType = (type: LegalDocumentType | ''): { name: string; labelKey: TranslationKey; type?: string }[] => {
       switch(type) {
           case 'nda': return [
               { name: 'disclosingPartyName', labelKey: 'legal_doc_form_disclosing_party_name' },
@@ -231,6 +231,75 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialData, onUpdateData,
 
     const legalGrowHelp = GROW_SECTIONS_HELP.find(s => s.title === GrowSection.LEGAL);
     const currentToolHelp = legalGrowHelp?.tools.find(tool => tool.tool === activeTool);
+    
+    const handleExport = async () => {
+        const { default: jsPDF } = await import('jspdf');
+        // @ts-ignore
+        const { autoTable } = await import('jspdf-autotable');
+        
+        const doc = new jsPDF();
+        (doc as any).autoTable = autoTable;
+
+        const yRef = { value: MARGIN_MM };
+        let totalPagesRef = { current: doc.getNumberOfPages() };
+        
+        addUserProfileHeader(doc, userProfile, yRef, totalPagesRef, t);
+    
+        doc.setFontSize(TITLE_FONT_SIZE);
+        doc.setFont("helvetica", "bold");
+        addTextWithPageBreaks(doc, t('legal_page_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_TITLE, totalPagesRef, t);
+        yRef.value += LINE_HEIGHT_NORMAL;
+    
+        // Document Automation
+        doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+        addTextWithPageBreaks(doc, t(LegalTool.DOCUMENT_AUTOMATION), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+        doc.setFontSize(TEXT_FONT_SIZE);
+        doc.setFont("helvetica", "normal");
+        if (initialData.documents.length > 0) {
+            initialData.documents.forEach(docItem => {
+                addTextWithPageBreaks(doc, `- ${docItem.name} (${t(docItem.type as TranslationKey)}) - Created on ${new Date(docItem.createdAt).toLocaleDateString()}`, MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+            });
+        } else {
+            addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        }
+        yRef.value += LINE_HEIGHT_NORMAL;
+
+        // Compliance Management
+        if (yRef.value > 250) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+        doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+        addTextWithPageBreaks(doc, t(LegalTool.COMPLIANCE_MANAGEMENT), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+        
+        const complianceHead = [['Item', 'Status', 'Notes']];
+        const complianceBody = initialData.complianceItems.map(item => [
+            item.name,
+            t(`legal_compliance_status_${item.status}` as TranslationKey, item.status),
+            item.notes
+        ]);
+
+        if (complianceBody.length > 0) {
+            (doc as any).autoTable({
+                startY: yRef.value,
+                head: complianceHead,
+                body: complianceBody,
+                theme: 'grid',
+                headStyles: { fillColor: [239, 71, 111] }, // coral color
+                styles: { fontSize: 8 },
+                columnStyles: { 2: { cellWidth: 80 } }
+            });
+            yRef.value = (doc as any).lastAutoTable.finalY + 10;
+        } else {
+            doc.setFontSize(TEXT_FONT_SIZE);
+            doc.setFont("helvetica", "normal");
+            addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        }
+
+        for (let i = 1; i <= doc.getNumberOfPages(); i++) {
+            doc.setPage(i);
+            addPageFooter(doc, i, doc.getNumberOfPages(), t);
+        }
+        
+        doc.save(`${t('legal_page_title', 'legal').toLowerCase().replace(/\s/g, '_')}_export.pdf`);
+    };
 
     return (
         <div className="flex flex-col md:flex-row h-full md:h-[calc(100vh-8rem-2rem)] relative bg-transparent">
@@ -254,16 +323,18 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialData, onUpdateData,
             <main className="flex-grow p-4 md:p-8 bg-transparent shadow-inner overflow-y-auto">
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-3xl font-bold text-slate-100">{t('legal_page_title')}</h2>
-                    <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
-                        {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <Button onClick={handleExport} variant="secondary">{t('export_all_button')}</Button>
+                        <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
+                            {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+                        </Button>
+                    </div>
                 </div>
                 {activeTool === LegalTool.DOCUMENT_AUTOMATION && <DocumentAutomationTool legalData={initialData} onUpdateData={onUpdateData} t={t} language={language} />}
                 {activeTool === LegalTool.COMPLIANCE_MANAGEMENT && <ComplianceManagementTool legalData={initialData} onUpdateData={onUpdateData} t={t} />}
             </main>
-             <FloatingActionButton icon={<HelpIcon className="h-6 w-6" />} tooltip={t('legal_help_button_tooltip')} onClick={() => setIsHelpModalOpen(true)} className="bottom-6 right-6 z-30" colorClass="bg-slate-600 hover:bg-slate-500" />
-             {/* FIX: Cast activeTool to TranslationKey to resolve TypeScript error */}
-             <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${t(activeTool as TranslationKey)}`} size="xl">
+            <FloatingActionButton icon={<HelpIcon />} tooltip={t('legal_help_button_tooltip')} onClick={() => setIsHelpModalOpen(true)} className="bottom-6 right-6 z-30" colorClass="bg-slate-600 hover:bg-slate-500" />
+            <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${t(activeTool as TranslationKey)}`} size="xl">
                 <div className="prose prose-sm prose-invert max-w-none text-slate-300 whitespace-pre-line max-h-[70vh] overflow-y-auto pr-2">
                     {currentToolHelp ? t(currentToolHelp.explanationKey) : "Help not found."}
                 </div>
@@ -275,7 +346,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialData, onUpdateData,
 // --- SVG Icons ---
 const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const MenuIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>);
-const HelpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>);
-const SparklesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 7.5l.813 2.846a4.5 4.5 0 01-3.09 3.09L12.187 15l-2.846.813a4.5 4.5 0 01-3.09-3.09L5.437 10.5l2.846-.813a4.5 4.5 0 013.09-3.09L12 3.75l.813 2.846a4.5 4.5 0 013.09 3.09L18.75 9l-2.846.813a4.5 4.5 0 01-3.09-3.09L12.187 6 12 5.25l.187.75z" /></svg>);
-const SpinnerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" {...props} className={`animate-spin ${props.className || ''}`}><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>);
+const HelpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>);
+const SparklesIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 7.5l.813 2.846a4.5 4.5 0 01-3.09 3.09L12.187 15l-2.846.813a4.5 4.5 0 01-3.09-3.09L5.437 10.5l2.846-.813a4.5 4.5 0 013.09-3.09L12 3.75l.813 2.846a4.5 4.5 0 013.09 3.09L18.75 9l-2.846.813a4.5 4.5 0 01-3.09-3.09L12.187 6 12 5.25l.187.75z" /></svg>);
+const SpinnerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" {...props}><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>);
 const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>);

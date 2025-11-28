@@ -64,6 +64,7 @@ export enum CopywritingSubSection {
   MARKETING = "Marketing Content & Plans",
   PITCH_REFINEMENT = "Pitch Refinement",
   ONE_PAGER_SUMMARY = "Investor One-Pager",
+  LANDING_PAGE_BUILDER = "Landing Page Builder",
 }
 
 export enum MindsetSubSection {
@@ -258,6 +259,7 @@ export interface CopywritingData {
     marketingPosts: MarketingPost[];
     pitches: Pitch[];
     onePager: OnePagerData;
+    landingPageHtml: string;
 }
 
 // ... Mindset ...
@@ -356,10 +358,10 @@ export interface GrowData {
 export interface NavItem { label: Page; subItems: SubPage[]; }
 export interface SectionHelp {
     title: string | SubPage;
-    sidebarTitle: { [key in Language]: TranslationKey | string };
+    sidebarTitle: { [key in Language]: TranslationKey };
     explanationKey: TranslationKey;
 }
-export interface CanvasSectionHelp { title: CanvasSection; sidebarTitle: { [key in Language]: string }; explanation: { [key in Language]: string }; example: { [key in Language]: string }; }
+export interface CanvasSectionHelp { title: CanvasSection; sidebarTitle: { [key in Language]: TranslationKey }; explanation: { [key in Language]: string }; example: { [key in Language]: string }; }
 export interface ResearchSectionHelp { title: ResearchSection; sidebarTitle: { [key in Language]: TranslationKey }; explanation: { [key in Language]: string }; }
 export interface CopywritingSectionHelp { title: CopywritingSubSection; sidebarTitle: { [key in Language]: TranslationKey }; explanation: { [key in Language]: string }; }
 export type MindsetSectionHelp = SectionHelp & { title: MindsetSubSection };
@@ -392,7 +394,9 @@ export type TranslationKey =
   | ProductDesignSubSection | EconomicsSubSection | SalesSubSection | StrategySubSection | GrowSection
   | LegalTool | InvestmentTool | ManagementTool | ChecklistTool | CostCategory | RevenueCategory
   | 'sidebar_research_qa' | 'sidebar_research_notes' | 'sidebar_research_competitors' | 'sidebar_research_trends' | 'sidebar_research_ai_summary'
-  | 'sidebar_copywriting_strategy' | 'sidebar_copywriting_marketing' | 'sidebar_copywriting_pitch' | 'sidebar_copywriting_onepager'
+  | 'sidebar_copywriting_strategy' | 'sidebar_copywriting_marketing' | 'sidebar_copywriting_pitch' | 'sidebar_copywriting_onepager' | 'sidebar_copywriting_landing_page'
+  | 'landing_page_builder_title' | 'landing_page_builder_explanation' | 'landing_page_generate_button' | 'landing_page_regenerating_button'
+  | 'landing_page_generating_button' | 'landing_page_copy_code_button' | 'landing_page_code_copied' | 'landing_page_download_button' | 'landing_page_no_code'
   | 'copywriting_strategy_title' | 'marketing_strategy_add_button' | 'marketing_strategy_no_strategies_placeholder'
   | 'ai_strategy_modal_title' | 'ai_strategy_modal_description' | 'ai_strategy_primary_goal_label' | 'ai_strategy_primary_goal_placeholder'
   | 'ai_strategy_total_budget_label' | 'ai_strategy_total_budget_placeholder' | 'ai_strategy_duration_label' | 'ai_strategy_duration_placeholder'
@@ -469,7 +473,6 @@ export type TranslationKey =
   | 'pdf_pitches_title' | 'pdf_pitch_title' | 'pdf_pitch_type_label' | 'pdf_target_audience_label' | 'pdf_key_message_label'
   | 'calendar_prev_week' | 'calendar_next_week' | 'calendar_add_post_tooltip' | 'day_sun_short' | 'day_mon_short' | 'day_tue_short' | 'day_wed_short' | 'day_thu_short' | 'day_fri_short' | 'day_sat_short'
   | 'month_jan' | 'month_feb' | 'month_mar' | 'month_apr' | 'month_may' | 'month_jun' | 'month_jul' | 'month_aug' | 'month_sep' | 'month_oct' | 'month_nov' | 'month_dec'
-  // FIX: Add missing infographic/hero section translation keys
   | 'infographic_title' | 'infographic_subtitle' | 'capkit_hero_title' | 'capkit_hero_subtitle' | 'capkit_hero_cta' | 'capkit_why_title'
   | 'capkit_feature_1_title' | 'capkit_feature_1_desc' | 'capkit_feature_2_title' | 'capkit_feature_2_desc' | 'capkit_feature_3_title' | 'capkit_feature_3_desc'
   | 'capkit_toolkit_title' | 'capkit_toolkit_subtitle' | 'capkit_byfounder_title' | 'capkit_byfounder_desc1' | 'capkit_byfounder_desc2' | 'capkit_finalcta_title'
@@ -516,4 +519,4 @@ export type TranslationKey =
   | 'ai_persona_modal_title' | 'ai_persona_idea_label' | 'ai_persona_idea_placeholder' | 'ai_persona_q1_label' | 'ai_persona_q1_placeholder' | 'ai_persona_q2_label' | 'ai_persona_q2_placeholder' | 'ai_persona_q3_label' | 'ai_persona_q3_placeholder' | 'ai_persona_generate_button' | 'ai_persona_generating_button'
   | 'personas_help_modal_title' | 'pdf_persona_report_title' | 'pdf_persona_demographics_title' | 'pdf_persona_bio_title' | 'pdf_persona_personality_title' | 'pdf_persona_traits_title' | 'pdf_persona_goals_title' | 'pdf_persona_frustrations_title' | 'pdf_persona_jtbd_title'
   | 'personas_help_intro' | 'personas_help_name_title' | 'personas_help_name_desc' | 'personas_help_demographics_title' | 'personas_help_demographics_desc' | 'personas_help_bio_title' | 'personas_help_bio_desc' | 'personas_help_personality_title' | 'personas_help_personality_desc' | 'personas_help_traits_title' | 'personas_help_traits_desc' | 'personas_help_goals_title' | 'personas_help_goals_desc' | 'personas_help_frustrations_title' | 'personas_help_frustrations_desc' | 'personas_help_jtbd_title' | 'personas_help_jtbd_desc'
-  ;
+  | 'capkit_toolkit_and_more';

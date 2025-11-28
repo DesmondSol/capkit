@@ -167,6 +167,7 @@ const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [auth, setAuth] = useState<{ isLoggedIn: boolean; email: string | null; accessLevel: 'full' | 'mindset_only' }>({ isLoggedIn: false, email: null, accessLevel: 'mindset_only' });
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent overwriting saved data with defaults
 
   // Initialize data states with defaults
   const [canvasData, setCanvasData] = useState<CanvasData>(initialCanvasData);
@@ -197,38 +198,53 @@ const App: React.FC = () => {
       const prefix = `capkit_user_${auth.email}_`;
 
       // Helper to safely load and parse
-      const load = <T,>(key: string, defaultVal: T): T => {
+      const load = <T,>(key: string, defaultVal: T): T | null => {
         const stored = localStorage.getItem(prefix + key);
         if (stored) {
           try { return JSON.parse(stored); } catch (e) { console.error(`Error parsing ${key}`, e); }
         }
-        return defaultVal;
+        return null;
       };
 
-      setCanvasData(load('canvasData', initialCanvasData));
-      setPersonasData(load('personasData', initialPersonasData));
-      setMarketResearchData(load('marketResearchData', initialMarketResearchData));
-      setCopywritingData(load('copywritingData', initialCopywritingData));
-      setMindsetData(load('mindsetData', initialMindsetData));
-      setProductDesignData(load('productDesignData', initialProductDesignData));
-      setEconomicsData(load('economicsData', initialEconomicsData));
-      setSalesData(load('salesData', initialSalesData));
+      // Load data or keep existing (guest) data if no saved data found
+      const loadedCanvas = load<CanvasData>('canvasData', initialCanvasData);
+      if (loadedCanvas) setCanvasData(loadedCanvas);
 
-      // Grow Data needs deep merge for structure updates
+      const loadedPersonas = load<PersonasData>('personasData', initialPersonasData);
+      if (loadedPersonas) setPersonasData(loadedPersonas);
+
+      const loadedMarketResearch = load<MarketResearchData>('marketResearchData', initialMarketResearchData);
+      if (loadedMarketResearch) setMarketResearchData(loadedMarketResearch);
+
+      const loadedCopywriting = load<CopywritingData>('copywritingData', initialCopywritingData);
+      if (loadedCopywriting) setCopywritingData(loadedCopywriting);
+
+      const loadedMindset = load<MindsetData>('mindsetData', initialMindsetData);
+      if (loadedMindset) setMindsetData(loadedMindset);
+
+      const loadedProductDesign = load<ProductDesignData>('productDesignData', initialProductDesignData);
+      if (loadedProductDesign) setProductDesignData(loadedProductDesign);
+
+      const loadedEconomics = load<EconomicsData>('economicsData', initialEconomicsData);
+      if (loadedEconomics) setEconomicsData(loadedEconomics);
+
+      const loadedSales = load<SalesData>('salesData', initialSalesData);
+      if (loadedSales) setSalesData(loadedSales);
+
+      // Grow Data needs deep merge for structure updates if loaded
       const storedGrow = localStorage.getItem(prefix + 'growData');
       if (storedGrow) {
         try {
           const parsed = JSON.parse(storedGrow);
-          const mergedLegal = { ...initialGrowData.legal, ...(parsed.legal || {}), complianceItems: parsed.legal?.complianceItems || initialGrowData.legal.complianceItems };
-          setGrowData({
-            legal: mergedLegal,
+          // Merge with initial to ensure new structure keys exist
+          const mergedGrow = {
+            legal: { ...initialGrowData.legal, ...(parsed.legal || {}) },
             investment: { ...initialGrowData.investment, ...(parsed.investment || {}) },
             management: { ...initialGrowData.management, ...(parsed.management || {}) },
             checklists: { ...initialGrowData.checklists, ...(parsed.checklists || {}) },
-          });
-        } catch (e) { console.error("Error parsing growData", e); setGrowData(initialGrowData); }
-      } else {
-        setGrowData(initialGrowData);
+          };
+          setGrowData(mergedGrow);
+        } catch (e) { console.error("Error parsing growData", e); }
       }
 
       // Load Profile
@@ -238,8 +254,11 @@ const App: React.FC = () => {
       } else {
         const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
         const currentUser = users.find(u => u.email === auth.email);
-        setUserProfile({ name: currentUser?.name || '', email: currentUser?.email || '' });
+        // Preserve current profile if it exists (guest), otherwise create from auth
+        setUserProfile(prev => prev || { name: currentUser?.name || '', email: currentUser?.email || '' });
       }
+
+      setIsDataLoaded(true); // Enable saving
 
     } else {
       // Reset to defaults on logout
@@ -253,25 +272,26 @@ const App: React.FC = () => {
       setSalesData(initialSalesData);
       setGrowData(initialGrowData);
       setUserProfile(null);
+      setIsDataLoaded(false); // Disable saving
     }
   }, [auth.email]);
 
   // --- Save Effects ---
   const save = (key: string, data: any) => {
-    if (auth.email) {
+    if (auth.email && isDataLoaded) {
       localStorage.setItem(`capkit_user_${auth.email}_${key}`, JSON.stringify(data));
     }
   };
 
-  useEffect(() => { save('canvasData', canvasData); }, [canvasData, auth.email]);
-  useEffect(() => { save('personasData', personasData); }, [personasData, auth.email]);
-  useEffect(() => { save('marketResearchData', marketResearchData); }, [marketResearchData, auth.email]);
-  useEffect(() => { save('copywritingData', copywritingData); }, [copywritingData, auth.email]);
-  useEffect(() => { save('mindsetData', mindsetData); }, [mindsetData, auth.email]);
-  useEffect(() => { save('productDesignData', productDesignData); }, [productDesignData, auth.email]);
-  useEffect(() => { save('economicsData', economicsData); }, [economicsData, auth.email]);
-  useEffect(() => { save('salesData', salesData); }, [salesData, auth.email]);
-  useEffect(() => { save('growData', growData); }, [growData, auth.email]);
+  useEffect(() => { save('canvasData', canvasData); }, [canvasData, auth.email, isDataLoaded]);
+  useEffect(() => { save('personasData', personasData); }, [personasData, auth.email, isDataLoaded]);
+  useEffect(() => { save('marketResearchData', marketResearchData); }, [marketResearchData, auth.email, isDataLoaded]);
+  useEffect(() => { save('copywritingData', copywritingData); }, [copywritingData, auth.email, isDataLoaded]);
+  useEffect(() => { save('mindsetData', mindsetData); }, [mindsetData, auth.email, isDataLoaded]);
+  useEffect(() => { save('productDesignData', productDesignData); }, [productDesignData, auth.email, isDataLoaded]);
+  useEffect(() => { save('economicsData', economicsData); }, [economicsData, auth.email, isDataLoaded]);
+  useEffect(() => { save('salesData', salesData); }, [salesData, auth.email, isDataLoaded]);
+  useEffect(() => { save('growData', growData); }, [growData, auth.email, isDataLoaded]);
 
 
   const t = useCallback(getTranslator(currentLanguage), [currentLanguage]);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './common/Button';
-import { Page, SubPage } from '../../types';
+import { Page, SubPage } from '../types';
 import { Footer } from './Footer';
 import {
   Rocket,
@@ -145,8 +145,8 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
                   key={sector}
                   onClick={() => setActiveSector(sector)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeSector === sector
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                     }`}
                 >
                   {sector}

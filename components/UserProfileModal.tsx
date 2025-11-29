@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Modal } from './common/Modal';
 import { Button } from './common/Button';

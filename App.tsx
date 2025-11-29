@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { BusinessLaunchCanvas } from './components/BusinessLaunchCanvas/BusinessLaunchCanvas';
 import { PersonasPage } from './components/PersonasPage/PersonasPage';
@@ -19,28 +18,31 @@ import { UserProfileModal } from './components/UserProfileModal';
 import InfographicPage from './components/InfographicPage';
 import { AuthPage } from './components/AuthPage';
 import { LockedFeature } from './components/LockedFeature';
-import {
-  Page,
-  SubPage,
-  CanvasData,
-  ALL_CANVAS_SECTIONS,
-  CanvasSection,
-  Language,
-  UserProfile,
-  MarketResearchData,
-  ResearchSection,
-  CopywritingData,
-  MindsetData,
-  PersonasData,
-  ProductDesignData,
-  EconomicsData,
-  SalesData,
-  GrowData,
-  TranslationKey,
-  UserAuthData
+import { 
+    Page, 
+    SubPage, 
+    CanvasData, 
+    ALL_CANVAS_SECTIONS, 
+    CanvasSection, 
+    Language, 
+    UserProfile, 
+    MarketResearchData, 
+    ResearchSection,
+    CopywritingData,
+    MindsetData,
+    PersonasData,
+    ProductDesignData,
+    EconomicsData,
+    SalesData,
+    GrowData,
+    TranslationKey,
+    UserAuthData
 } from './types';
 import { NAV_ITEMS } from './constants';
 import { getTranslator } from './locales';
+import { auth, db } from './components/firebase';
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 
 const initialCanvasData: CanvasData = ALL_CANVAS_SECTIONS.reduce((acc, section) => {
   acc[section] = "";
@@ -48,7 +50,7 @@ const initialCanvasData: CanvasData = ALL_CANVAS_SECTIONS.reduce((acc, section) 
 }, {} as CanvasData);
 
 const initialMarketResearchData: MarketResearchData = {
-  [ResearchSection.QUESTIONS]: [],
+  [ResearchSection.QUESTIONS]: [], 
   [ResearchSection.GENERAL_NOTES_IMPORT]: "",
   [ResearchSection.COMPETITOR_ANALYSIS]: [],
   [ResearchSection.TRENDS]: [],
@@ -101,47 +103,47 @@ const initialProductDesignData: ProductDesignData = {
 };
 
 const initialEconomicsData: EconomicsData = {
-  costs: [],
-  revenues: [],
-  unitEconomics: {
-    avgRevenue: '',
-    cogs: '',
-    cac: '',
-    customerLifetime: '',
-  },
-  burnRate: {
-    startingCapital: '',
-    additionalHiringSpend: '',
-    additionalMarketingSpend: '',
-  },
-  financialProjection: {
-    inputs: {
-      startingCapital: '',
-      products: [],
-      salesGrowthRate: '',
-      monthlyRevenue: '',
-      monthlyExpenses: '',
+    costs: [],
+    revenues: [],
+    unitEconomics: {
+      avgRevenue: '',
+      cogs: '',
+      cac: '',
+      customerLifetime: '',
     },
-    result: null,
-  }
+    burnRate: {
+        startingCapital: '',
+        additionalHiringSpend: '',
+        additionalMarketingSpend: '',
+    },
+    financialProjection: {
+      inputs: {
+        startingCapital: '',
+        products: [],
+        salesGrowthRate: '',
+        monthlyRevenue: '',
+        monthlyExpenses: '',
+      },
+      result: null,
+    }
 };
 
 const initialSalesData: SalesData = {
-  launchSequence: [],
-  crmLeads: [],
+    launchSequence: [],
+    crmLeads: [],
 };
 
 const initialGrowData: GrowData = {
   legal: {
     documents: [],
     complianceItems: [
-      { id: 'comp-1', name: 'Business Registration & Licensing', status: 'pending', notes: 'Register company name and obtain principal registration certificate from Ministry of Trade and Industry (MoTI).' },
-      { id: 'comp-2', name: 'Tax Identification Number (TIN)', status: 'pending', notes: 'Obtain TIN from the Ethiopian Revenue and Customs Authority (ERCA). This is mandatory for all businesses.' },
-      { id: 'comp-3', name: 'Value Added Tax (VAT) Registration', status: 'pending', notes: 'Register for VAT if annual turnover is expected to exceed ETB 1,000,000.' },
-      { id: 'comp-4', name: 'Employment Contracts', status: 'pending', notes: 'Ensure all employment contracts comply with the Ethiopian Labour Proclamation No. 1156/2019.' },
-      { id: 'comp-5', name: 'Private Organization Employees Pension Fund', status: 'pending', notes: 'Register and contribute for all permanent employees. Contribution is 7% from employer and 11% from employee.' },
-      { id: 'comp-6', name: 'Business Bank Account', status: 'pending', notes: 'Open a dedicated commercial bank account for all business transactions.' },
-      { id: 'comp-7', name: 'Intellectual Property (IP) Protection', status: 'pending', notes: 'Consider registering trademarks, patents, or copyrights with the Ethiopian Intellectual Property Office (EIPO).' },
+        { id: 'comp-1', name: 'Business Registration & Licensing', status: 'pending', notes: 'Register company name and obtain principal registration certificate from Ministry of Trade and Industry (MoTI).'},
+        { id: 'comp-2', name: 'Tax Identification Number (TIN)', status: 'pending', notes: 'Obtain TIN from the Ethiopian Revenue and Customs Authority (ERCA). This is mandatory for all businesses.'},
+        { id: 'comp-3', name: 'Value Added Tax (VAT) Registration', status: 'pending', notes: 'Register for VAT if annual turnover is expected to exceed ETB 1,000,000.'},
+        { id: 'comp-4', name: 'Employment Contracts', status: 'pending', notes: 'Ensure all employment contracts comply with the Ethiopian Labour Proclamation No. 1156/2019.'},
+        { id: 'comp-5', name: 'Private Organization Employees Pension Fund', status: 'pending', notes: 'Register and contribute for all permanent employees. Contribution is 7% from employer and 11% from employee.'},
+        { id: 'comp-6', name: 'Business Bank Account', status: 'pending', notes: 'Open a dedicated commercial bank account for all business transactions.'},
+        { id: 'comp-7', name: 'Intellectual Property (IP) Protection', status: 'pending', notes: 'Consider registering trademarks, patents, or copyrights with the Ethiopian Intellectual Property Office (EIPO).'},
     ],
   },
   investment: {
@@ -166,8 +168,8 @@ const App: React.FC = () => {
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [auth, setAuth] = useState<{ isLoggedIn: boolean; email: string | null; accessLevel: 'full' | 'mindset_only' }>({ isLoggedIn: false, email: null, accessLevel: 'mindset_only' });
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // Flag to prevent overwriting saved data with defaults
+  const [userAuth, setUserAuth] = useState<{ isLoggedIn: boolean; email: string | null; uid: string | null; accessLevel: 'full' | 'mindset_only' }>({ isLoggedIn: false, email: null, uid: null, accessLevel: 'mindset_only' });
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Initialize data states with defaults
   const [canvasData, setCanvasData] = useState<CanvasData>(initialCanvasData);
@@ -180,160 +182,184 @@ const App: React.FC = () => {
   const [salesData, setSalesData] = useState<SalesData>(initialSalesData);
   const [growData, setGrowData] = useState<GrowData>(initialGrowData);
 
-  // Check for session on mount
+  // Refs to track remote updates to prevent infinite loops with useEffect dependencies
+  const isRemoteUpdate = useRef<{ [key: string]: boolean }>({});
+
+  // Firebase Auth Listener
   useEffect(() => {
-    const sessionEmail = localStorage.getItem('capkitSessionEmail');
-    if (sessionEmail) {
-      const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
-      const currentUser = users.find(u => u.email === sessionEmail);
-      if (currentUser) {
-        setAuth({ isLoggedIn: true, email: sessionEmail, accessLevel: currentUser.accessLevel });
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserAuth({ isLoggedIn: true, email: user.email, uid: user.uid, accessLevel: 'full' }); // Default full for now or fetch from DB
+        setIsAuthModalOpen(false);
+      } else {
+        setUserAuth({ isLoggedIn: false, email: null, uid: null, accessLevel: 'mindset_only' });
+        // Reset to defaults on logout
+        setCanvasData(initialCanvasData);
+        setPersonasData(initialPersonasData);
+        setMarketResearchData(initialMarketResearchData);
+        setCopywritingData(initialCopywritingData);
+        setMindsetData(initialMindsetData);
+        setProductDesignData(initialProductDesignData);
+        setEconomicsData(initialEconomicsData);
+        setSalesData(initialSalesData);
+        setGrowData(initialGrowData);
+        setUserProfile(null);
+        setIsDataLoaded(false);
+        setActivePage(null); // Go to landing page
       }
-    }
+    });
+    return () => unsubscribe();
   }, []);
 
-  // Load User Data when logged in
+  // --- Real-time Data Sync (Load/Listen) ---
   useEffect(() => {
-    if (auth.email) {
-      const prefix = `capkit_user_${auth.email}_`;
+    if (!userAuth.uid) return;
 
-      // Helper to safely load and parse
-      const load = <T,>(key: string, defaultVal: T): T | null => {
-        const stored = localStorage.getItem(prefix + key);
-        if (stored) {
-          try { return JSON.parse(stored); } catch (e) { console.error(`Error parsing ${key}`, e); }
+    const workspaceId = userAuth.uid; // Simple 1:1 user-workspace for now
+    const modulesRef = (moduleName: string) => doc(db, 'workspaces', workspaceId, 'modules', moduleName);
+
+    const subs = [
+      onSnapshot(modulesRef('canvas'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['canvas'] = true;
+          setCanvasData(doc.data() as CanvasData);
         }
-        return null;
-      };
-
-      // Load data or keep existing (guest) data if no saved data found
-      const loadedCanvas = load<CanvasData>('canvasData', initialCanvasData);
-      if (loadedCanvas) setCanvasData(loadedCanvas);
-
-      const loadedPersonas = load<PersonasData>('personasData', initialPersonasData);
-      if (loadedPersonas) setPersonasData(loadedPersonas);
-
-      const loadedMarketResearch = load<MarketResearchData>('marketResearchData', initialMarketResearchData);
-      if (loadedMarketResearch) setMarketResearchData(loadedMarketResearch);
-
-      const loadedCopywriting = load<CopywritingData>('copywritingData', initialCopywritingData);
-      if (loadedCopywriting) setCopywritingData(loadedCopywriting);
-
-      const loadedMindset = load<MindsetData>('mindsetData', initialMindsetData);
-      if (loadedMindset) setMindsetData(loadedMindset);
-
-      const loadedProductDesign = load<ProductDesignData>('productDesignData', initialProductDesignData);
-      if (loadedProductDesign) setProductDesignData(loadedProductDesign);
-
-      const loadedEconomics = load<EconomicsData>('economicsData', initialEconomicsData);
-      if (loadedEconomics) setEconomicsData(loadedEconomics);
-
-      const loadedSales = load<SalesData>('salesData', initialSalesData);
-      if (loadedSales) setSalesData(loadedSales);
-
-      // Grow Data needs deep merge for structure updates if loaded
-      const storedGrow = localStorage.getItem(prefix + 'growData');
-      if (storedGrow) {
-        try {
-          const parsed = JSON.parse(storedGrow);
-          // Merge with initial to ensure new structure keys exist
+      }),
+      onSnapshot(modulesRef('personas'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['personas'] = true;
+          setPersonasData(doc.data().data as PersonasData);
+        }
+      }),
+      onSnapshot(modulesRef('marketResearch'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['marketResearch'] = true;
+          setMarketResearchData(doc.data() as MarketResearchData);
+        }
+      }),
+      onSnapshot(modulesRef('copywriting'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['copywriting'] = true;
+          setCopywritingData(doc.data() as CopywritingData);
+        }
+      }),
+      onSnapshot(modulesRef('mindset'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['mindset'] = true;
+          setMindsetData(doc.data() as MindsetData);
+        }
+      }),
+      onSnapshot(modulesRef('productDesign'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['productDesign'] = true;
+          setProductDesignData(doc.data() as ProductDesignData);
+        }
+      }),
+      onSnapshot(modulesRef('economics'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['economics'] = true;
+          setEconomicsData(doc.data() as EconomicsData);
+        }
+      }),
+      onSnapshot(modulesRef('sales'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['sales'] = true;
+          setSalesData(doc.data() as SalesData);
+        }
+      }),
+      onSnapshot(modulesRef('grow'), (doc) => {
+        if (doc.exists()) {
+          isRemoteUpdate.current['grow'] = true;
+          const data = doc.data() as GrowData;
+          // Deep merge logic for grow data to ensure new structure keys exist if missing
           const mergedGrow = {
-            legal: { ...initialGrowData.legal, ...(parsed.legal || {}) },
-            investment: { ...initialGrowData.investment, ...(parsed.investment || {}) },
-            management: { ...initialGrowData.management, ...(parsed.management || {}) },
-            checklists: { ...initialGrowData.checklists, ...(parsed.checklists || {}) },
+              legal: { ...initialGrowData.legal, ...(data.legal || {}) },
+              investment: { ...initialGrowData.investment, ...(data.investment || {}) },
+              management: { ...initialGrowData.management, ...(data.management || {}) },
+              checklists: { ...initialGrowData.checklists, ...(data.checklists || {}) },
           };
           setGrowData(mergedGrow);
-        } catch (e) { console.error("Error parsing growData", e); }
+        }
+      }),
+      onSnapshot(doc(db, 'users', userAuth.uid), (doc) => {
+          if (doc.exists()) {
+              setUserProfile(doc.data() as UserProfile);
+          } else {
+              // Create default profile if not exists
+              const defaultProfile: UserProfile = { name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' };
+              setUserProfile(defaultProfile);
+              setDoc(doc.ref, defaultProfile, { merge: true });
+          }
+      })
+    ];
+
+    setIsDataLoaded(true);
+
+    return () => {
+      subs.forEach(unsub => unsub());
+    };
+  }, [userAuth.uid]);
+
+  // --- Debounced Save Effects ---
+  const useDebouncedSave = (key: string, data: any, delay: number = 1500) => {
+    useEffect(() => {
+      if (!userAuth.uid || !isDataLoaded) return;
+      if (isRemoteUpdate.current[key]) {
+        isRemoteUpdate.current[key] = false;
+        return;
       }
 
-      // Load Profile
-      const storedProfile = localStorage.getItem(`capkitUserProfile_${auth.email}`);
-      if (storedProfile) {
-        try { setUserProfile(JSON.parse(storedProfile)); } catch (e) { console.error("Failed to parse userProfile", e); }
-      } else {
-        const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
-        const currentUser = users.find(u => u.email === auth.email);
-        // Preserve current profile if it exists (guest), otherwise create from auth
-        setUserProfile(prev => prev || { name: currentUser?.name || '', email: currentUser?.email || '' });
-      }
+      const handler = setTimeout(() => {
+        const workspaceId = userAuth.uid!;
+        const docRef = doc(db, 'workspaces', workspaceId, 'modules', key);
+        // For array roots like PersonasData, we wrap in an object
+        const payload = Array.isArray(data) ? { data: data } : data;
+        setDoc(docRef, payload, { merge: true }).catch(console.error);
+      }, delay);
 
-      setIsDataLoaded(true); // Enable saving
-
-    } else {
-      // Reset to defaults on logout
-      setCanvasData(initialCanvasData);
-      setPersonasData(initialPersonasData);
-      setMarketResearchData(initialMarketResearchData);
-      setCopywritingData(initialCopywritingData);
-      setMindsetData(initialMindsetData);
-      setProductDesignData(initialProductDesignData);
-      setEconomicsData(initialEconomicsData);
-      setSalesData(initialSalesData);
-      setGrowData(initialGrowData);
-      setUserProfile(null);
-      setIsDataLoaded(false); // Disable saving
-    }
-  }, [auth.email]);
-
-  // --- Save Effects ---
-  const save = (key: string, data: any) => {
-    if (auth.email && isDataLoaded) {
-      localStorage.setItem(`capkit_user_${auth.email}_${key}`, JSON.stringify(data));
-    }
+      return () => clearTimeout(handler);
+    }, [data, userAuth.uid, isDataLoaded]);
   };
 
-  useEffect(() => { save('canvasData', canvasData); }, [canvasData, auth.email, isDataLoaded]);
-  useEffect(() => { save('personasData', personasData); }, [personasData, auth.email, isDataLoaded]);
-  useEffect(() => { save('marketResearchData', marketResearchData); }, [marketResearchData, auth.email, isDataLoaded]);
-  useEffect(() => { save('copywritingData', copywritingData); }, [copywritingData, auth.email, isDataLoaded]);
-  useEffect(() => { save('mindsetData', mindsetData); }, [mindsetData, auth.email, isDataLoaded]);
-  useEffect(() => { save('productDesignData', productDesignData); }, [productDesignData, auth.email, isDataLoaded]);
-  useEffect(() => { save('economicsData', economicsData); }, [economicsData, auth.email, isDataLoaded]);
-  useEffect(() => { save('salesData', salesData); }, [salesData, auth.email, isDataLoaded]);
-  useEffect(() => { save('growData', growData); }, [growData, auth.email, isDataLoaded]);
-
+  useDebouncedSave('canvas', canvasData);
+  useDebouncedSave('personas', personasData); // Will be saved as { data: [...] }
+  useDebouncedSave('marketResearch', marketResearchData);
+  useDebouncedSave('copywriting', copywritingData);
+  useDebouncedSave('mindset', mindsetData);
+  useDebouncedSave('productDesign', productDesignData);
+  useDebouncedSave('economics', economicsData);
+  useDebouncedSave('sales', salesData);
+  useDebouncedSave('grow', growData);
 
   const t = useCallback(getTranslator(currentLanguage), [currentLanguage]);
 
-  const handleLoginSuccess = (email: string, accessLevel: 'full' | 'mindset_only') => {
-    localStorage.setItem('capkitSessionEmail', email);
-    setAuth({ isLoggedIn: true, email, accessLevel });
-    setIsAuthModalOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('capkitSessionEmail');
-    setAuth({ isLoggedIn: false, email: null, accessLevel: 'mindset_only' });
-    setActivePage(null);
-    setActiveSubPage(null);
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+    } catch(e) {
+        console.error("Logout failed", e);
+    }
   };
 
   const handleUnlockSuccess = () => {
-    if (!auth.email) return;
-    const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
-    const updatedUsers = users.map(u => u.email === auth.email ? { ...u, accessLevel: 'full' } : u);
-    localStorage.setItem('capkitUsers', JSON.stringify(updatedUsers));
-    setAuth(prev => ({ ...prev, accessLevel: 'full' }));
+    // This is less relevant with Firebase but can be used for upgrading role field in Firestore user doc
+    setUserAuth(prev => ({ ...prev, accessLevel: 'full' }));
     setIsUserProfileModalOpen(false);
   };
-
+  
   const handleUpdateUserProfile = (profile: UserProfile) => {
-    if (auth.email) {
+    if (userAuth.uid) {
       setUserProfile(profile);
-      localStorage.setItem(`capkitUserProfile_${auth.email}`, JSON.stringify(profile));
+      setDoc(doc(db, 'users', userAuth.uid), profile, { merge: true });
       setIsUserProfileModalOpen(false);
     }
   };
 
   const handleSelectPage = (page: Page | null, subPage: SubPage | null) => {
-    // If user is not logged in and tries to navigate, always show auth modal first.
-    if (!auth.isLoggedIn && page !== null) {
+    if (!userAuth.isLoggedIn && page !== null) {
       setIsAuthModalOpen(true);
       return;
     }
-
-    // Default action: navigate to the selected page/subpage.
     setActivePage(page);
     setActiveSubPage(subPage);
   };
@@ -342,39 +368,38 @@ const App: React.FC = () => {
     if (activePage === null || (activePage !== null && activeSubPage === null)) {
       return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
-
-    const hasAccess = auth.isLoggedIn && (auth.accessLevel === 'full' || (activePage === Page.START && activeSubPage === SubPage.MINDSET));
-
-    if (auth.isLoggedIn && !hasAccess) {
-      return <LockedFeature onUnlockClick={() => setIsUserProfileModalOpen(true)} t={t} />;
+    
+    // Simple access check
+    if (userAuth.isLoggedIn && userAuth.accessLevel !== 'full' && activePage !== Page.START) {
+         return <LockedFeature onUnlockClick={() => setIsUserProfileModalOpen(true)} t={t} />;
     }
-
-    if (!auth.isLoggedIn) {
+    
+    if (!userAuth.isLoggedIn) {
       return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
 
     switch (activePage) {
       case Page.START:
-        switch (activeSubPage) {
+        switch(activeSubPage) {
           case SubPage.MINDSET: return <MindsetPage initialData={mindsetData} onUpdateData={setMindsetData} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.STRATEGY: return <StrategyPage canvasData={canvasData} onSaveCanvasSection={(section, content) => setCanvasData(prev => ({ ...prev, [section]: content }))} onMassUpdateCanvas={(newData) => setCanvasData(prev => ({ ...prev, ...newData }))} personasData={personasData} onUpdatePersonasData={setPersonasData} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.STRATEGY: return <StrategyPage canvasData={canvasData} onSaveCanvasSection={(section, content) => setCanvasData(prev => ({...prev, [section]: content}))} onMassUpdateCanvas={(newData) => setCanvasData(prev => ({...prev, ...newData}))} personasData={personasData} onUpdatePersonasData={setPersonasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.RESEARCH: return <MarketResearchAccelerator initialData={marketResearchData} onUpdateData={setMarketResearchData} strategyData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.COPYWRITING: return <CopywritingPage initialData={copywritingData} onUpdateData={setCopywritingData} strategyData={canvasData} researchData={marketResearchData} personasData={personasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.BUILD:
-        switch (activeSubPage) {
+        switch(activeSubPage) {
           case SubPage.PRODUCT_DESIGN: return <ProductDesignPage initialData={productDesignData} onUpdateData={setProductDesignData} canvasData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.ECONOMICS: return <EconomicsPage initialData={economicsData} onUpdateData={setEconomicsData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.SALES: return <SalesPage initialData={salesData} onUpdateData={setSalesData} canvasData={canvasData} personasData={personasData} researchData={marketResearchData} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.GROW:
-        switch (activeSubPage) {
-          case SubPage.LEGAL: return <LegalPage initialData={growData.legal} onUpdateData={d => setGrowData(p => ({ ...p, legal: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.INVESTMENT: return <InvestmentPage initialData={growData.investment} onUpdateData={d => setGrowData(p => ({ ...p, investment: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.MANAGEMENT: return <ManagementPage initialData={growData.management} onUpdateData={d => setGrowData(p => ({ ...p, management: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.CHECKLISTS: return <ChecklistsPage initialData={growData.checklists} onUpdateData={d => setGrowData(p => ({ ...p, checklists: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
+        switch(activeSubPage) {
+          case SubPage.LEGAL: return <LegalPage initialData={growData.legal} onUpdateData={d => setGrowData(p => ({...p, legal: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.INVESTMENT: return <InvestmentPage initialData={growData.investment} onUpdateData={d => setGrowData(p => ({...p, investment: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.MANAGEMENT: return <ManagementPage initialData={growData.management} onUpdateData={d => setGrowData(p => ({...p, management: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.CHECKLISTS: return <ChecklistsPage initialData={growData.checklists} onUpdateData={d => setGrowData(p => ({...p, checklists: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       default:
@@ -393,21 +418,21 @@ const App: React.FC = () => {
         t={t}
         userProfile={userProfile}
         onOpenProfileModal={() => setIsUserProfileModalOpen(true)}
-        isLoggedIn={auth.isLoggedIn}
-        accessLevel={auth.accessLevel}
+        isLoggedIn={userAuth.isLoggedIn}
+        accessLevel={userAuth.accessLevel}
         onLogout={handleLogout}
       />
       <main className="container mx-auto p-4 md:p-8 flex-grow">
-        {renderContent()}
+          {renderContent()}
       </main>
-
+      
       {isAuthModalOpen && (
-        <AuthPage
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-          t={t}
-          language={currentLanguage}
+        <AuthPage 
+            isOpen={isAuthModalOpen} 
+            onClose={() => setIsAuthModalOpen(false)} 
+            onLoginSuccess={() => setIsAuthModalOpen(false)} // Handled by auth listener
+            t={t}
+            language={currentLanguage}
         />
       )}
 
@@ -418,7 +443,7 @@ const App: React.FC = () => {
           onSave={handleUpdateUserProfile}
           currentUserProfile={userProfile}
           t={t}
-          accessLevel={auth.accessLevel}
+          accessLevel={userAuth.accessLevel}
           onUnlockSuccess={handleUnlockSuccess}
         />
       )}

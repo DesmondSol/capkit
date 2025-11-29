@@ -1,9 +1,10 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './common/Button';
-import { Language, TranslationKey, UserAuthData } from '../types';
+import { Language, TranslationKey } from '../types';
 import { Modal } from './common/Modal';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from './firebase';
 
 interface AuthPageProps {
   isOpen: boolean;
@@ -20,38 +21,92 @@ export const AuthPage: React.FC<AuthPageProps> = ({ isOpen, onClose, onLoginSucc
   const [name, setName] = useState('');
   const [unlockCode, setUnlockCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault();
-    // FIX: Use 'capkitUsers' to match the key used in App.tsx
-    const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
-    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-      setError(t('auth_error_email_exists'));
-      return;
+  // Clear errors when switching views
+  useEffect(() => {
+    setError(null);
+    setEmail('');
+    setPassword('');
+    setName('');
+  }, [isLoginView, isOpen]);
+
+  const getFriendlyErrorMessage = (errorCode: string): string => {
+    switch (errorCode) {
+      case 'auth/email-already-in-use':
+        return t('auth_error_email_exists', 'This email is already in use.');
+      case 'auth/invalid-email':
+        return language === 'am' ? 'የኢሜል አድራሻው የተሳሳተ ነው።' : 'Invalid email address format.';
+      case 'auth/user-disabled':
+        return language === 'am' ? 'ይህ መለያ ተሰናክሏል።' : 'This user account has been disabled.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return t('auth_error_invalid_credentials', 'Invalid email or password.');
+      case 'auth/weak-password':
+        return language === 'am' ? 'የይለፍ ቃል በጣም ደካማ ነው። ቢያንስ 6 ቁምፊዎችን ይጠቀሙ።' : 'Password is too weak. Please use at least 6 characters.';
+      case 'auth/network-request-failed':
+        return language === 'am' ? 'የኔትወርክ ችግር። እባክዎ ግንኙነትዎን ያረጋግጡ።' : 'Network error. Please check your internet connection.';
+      case 'auth/too-many-requests':
+        return language === 'am' ? 'በጣም ብዙ ሙከራዎች። እባክዎ ቆየት ብለው ይሞክሩ።' : 'Too many failed attempts. Please try again later.';
+      default:
+        return t('auth_error_generic', 'An unexpected error occurred. Please try again.');
     }
-
-    const newUser: UserAuthData = {
-      name,
-      email,
-      password, // Storing plaintext password - NOT secure, for demo purposes only
-      accessLevel: unlockCode.toLowerCase() === 'demo' ? 'full' : 'mindset_only',
-    };
-
-    users.push(newUser);
-    // FIX: Use 'capkitUsers' to match the key used in App.tsx
-    localStorage.setItem('capkitUsers', JSON.stringify(users));
-    onLoginSuccess(newUser.email, newUser.accessLevel);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const validateInputs = (): boolean => {
+    if (!email.includes('@')) {
+      setError(language === 'am' ? 'እባክዎ ትክክለኛ ኢሜይል ያስገቡ።' : 'Please enter a valid email address.');
+      return false;
+    }
+    if (password.length < 6) {
+      setError(language === 'am' ? 'የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት።' : 'Password must be at least 6 characters long.');
+      return false;
+    }
+    if (!isLoginView && name.trim().length === 0) {
+      setError(language === 'am' ? 'እባክዎ ስምዎን ያስገቡ።' : 'Please enter your full name.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // FIX: Use 'capkitUsers' to match the key used in App.tsx
-    const users: UserAuthData[] = JSON.parse(localStorage.getItem('capkitUsers') || '[]');
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (user) {
-      onLoginSuccess(user.email, user.accessLevel);
-    } else {
-      setError(t('auth_error_invalid_credentials'));
+    if (!validateInputs()) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Update display name immediately
+      if (auth.currentUser && name) {
+          await updateProfile(auth.currentUser, { displayName: name });
+      }
+      
+      const accessLevel = unlockCode.toLowerCase() === 'demo' ? 'full' : 'mindset_only';
+      onLoginSuccess(userCredential.user.email!, accessLevel);
+    } catch (err: any) {
+      console.error("Signup Error:", err);
+      setError(getFriendlyErrorMessage(err.code));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateInputs()) return;
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      onLoginSuccess(userCredential.user.email!, 'mindset_only'); 
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      setError(getFriendlyErrorMessage(err.code));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,23 +122,55 @@ export const AuthPage: React.FC<AuthPageProps> = ({ isOpen, onClose, onLoginSucc
         </div>
         
         <form onSubmit={isLoginView ? handleLogin : handleSignUp} className="space-y-6">
-          {error && <p className="text-red-400 bg-red-900/30 text-center p-3 rounded-lg text-sm">{error}</p>}
+          {error && (
+            <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3 flex items-start space-x-2 animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <p className="text-red-200 text-sm font-medium">{error}</p>
+            </div>
+          )}
 
           {!isLoginView && (
             <div>
               <label htmlFor="name" className={labelBaseClasses}>{t('auth_name_label')}</label>
-              <input id="name" name="name" type="text" value={name} onChange={e => setName(e.target.value)} required className={inputBaseClasses} />
+              <input 
+                id="name" 
+                name="name" 
+                type="text" 
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                className={inputBaseClasses} 
+                placeholder="John Doe"
+              />
             </div>
           )}
           
           <div>
             <label htmlFor="email" className={labelBaseClasses}>{t('auth_email_label')}</label>
-            <input id="email" name="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required className={inputBaseClasses} />
+            <input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                className={inputBaseClasses} 
+                placeholder="you@example.com"
+            />
           </div>
 
           <div>
             <label htmlFor="password" className={labelBaseClasses}>{t('auth_password_label')}</label>
-            <input id="password" name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className={inputBaseClasses} />
+            <input 
+                id="password" 
+                name="password" 
+                type="password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                className={inputBaseClasses} 
+                placeholder="••••••••"
+            />
+            {!isLoginView && <p className="text-xs text-slate-500 mt-1">{language === 'am' ? 'ቢያንስ 6 ቁምፊዎች' : 'Min. 6 characters'}</p>}
           </div>
 
           {!isLoginView && (
@@ -94,8 +181,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ isOpen, onClose, onLoginSucc
           )}
 
           <div>
-            <Button type="submit" variant="primary" size="lg" className="w-full">
-              {isLoginView ? t('auth_login_button') : t('auth_signup_button')}
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                  <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                  </span>
+              ) : (
+                  isLoginView ? t('auth_login_button') : t('auth_signup_button')
+              )}
             </Button>
           </div>
         </form>

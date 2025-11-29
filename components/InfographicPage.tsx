@@ -39,6 +39,9 @@ import {
   MapPin,
 } from "lucide-react";
 
+// Declare Chart.js global variable
+declare var Chart: any;
+
 interface InfographicPageProps {
   language: Language;
   t: (key: TranslationKey, defaultText?: string) => string;
@@ -262,6 +265,79 @@ const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNaviga
     onNavigate(Page.START, SubPage.MINDSET);
   };
 
+  const progressChartRef = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<any>(null);
+
+  useEffect(() => {
+    if (progressChartRef.current && typeof Chart !== 'undefined') {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+
+      const ctx = progressChartRef.current.getContext('2d');
+      if (ctx) {
+        // Create gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(17, 138, 178, 0.4)'); // Primary color #118AB2
+        gradient.addColorStop(1, 'rgba(17, 138, 178, 0)');
+
+        chartInstance.current = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+            datasets: [{
+              label: 'Growth',
+              data: [40, 65, 45, 80, 55, 90, 75, 95],
+              borderColor: '#118AB2', // Primary
+              backgroundColor: gradient,
+              borderWidth: 2,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { 
+                enabled: true,
+                intersect: false,
+                mode: 'index',
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleColor: '#e2e8f0',
+                bodyColor: '#e2e8f0',
+                borderColor: 'rgba(30, 41, 59, 0.5)',
+                borderWidth: 1,
+              }
+            },
+            scales: {
+              x: { display: false },
+              y: { display: false, min: 0, max: 100 }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+    }
+
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden -m-4 md:-m-8">
       {/* Background Effects */}
@@ -354,16 +430,8 @@ const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNaviga
                         <span className="text-sm text-muted-foreground">Startup Progress</span>
                         <span className="text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">+24%</span>
                       </div>
-                      <div className="h-32 flex items-end gap-2">
-                        {[40, 65, 45, 80, 55, 90, 75, 95].map((h, i) => (
-                          <motion.div
-                            key={i}
-                            className="flex-1 bg-gradient-to-t from-primary/50 to-primary rounded-t"
-                            initial={{ height: 0 }}
-                            animate={{ height: `${h}%` }}
-                            transition={{ duration: 0.8, delay: 0.1 * i }}
-                          />
-                        ))}
+                      <div className="h-32 w-full relative">
+                        <canvas ref={progressChartRef}></canvas>
                       </div>
                     </motion.div>
 

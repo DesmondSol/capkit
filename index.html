@@ -10,7 +10,6 @@
   <style>
     @import url('https://rsms.me/inter/inter.css');
 
-    /* Moved to top */
     /* Custom scrollbar for webkit browsers - Dark Theme */
     ::-webkit-scrollbar {
       width: 8px;
@@ -34,12 +33,9 @@
       /* slate-600 */
     }
 
-    /* Simple body styling for better visual */
     body {
       font-family: 'Inter', sans-serif;
-      /* A common Tailwind font */
       overscroll-behavior-y: contain;
-      /* Prevents pull-to-refresh on mobile if content is scrollable */
     }
 
     html {
@@ -55,48 +51,6 @@
     .scroll-mt-24 {
         scroll-margin-top: 6rem; /* 96px */
     }
-
-    /* --- Pre-React Loader Styles --- */
-    .loader-container {
-      position: fixed;
-      inset: 0;
-      background-color: #073B4C;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      color: #cbd5e1;
-      /* slate-300 */
-      transition: opacity 0.5s ease-in-out;
-    }
-
-    .loader-spinner {
-      border: 4px solid rgba(255, 255, 255, 0.2);
-      border-left-color: #06D6A0;
-      /* green accent */
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
-
-    .loader-quote {
-      font-style: italic;
-      max-width: 80%;
-      text-align: center;
-      font-size: 1.1rem;
-      color: #94a3b8;
-      /* slate-400 */
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
   </style>
   <link rel="stylesheet" href="/index.css">
 <script type="importmap">
@@ -105,6 +59,7 @@
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
     "path": "https://aistudiocdn.com/path@^0.12.7",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
     "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
@@ -118,20 +73,7 @@
 </head>
 
 <body class="bg-background text-foreground font-inter antialiased">
-  <!-- 
-  <div class="bg-[#FFD166] text-slate-900 py-2 px-4 text-center text-sm">
-    May class starting soon. <a href="https://forms.gle/EG67kvukpZU3b5yD7"
-      class="font-semibold underline hover:text-yellow-800 transition-colors">Register here</a>.
-  </div>
-  -->
-  <div id="root">
-    <!-- Pre-React Loading Screen -->
-    <div class="loader-container">
-      <h1 class="text-3xl font-bold text-white tracking-wider" style="margin-bottom: 2rem;">Capkit</h1>
-      <div class="loader-spinner"></div>
-      <p class="loader-quote">"The best way to predict the future is to create it."</p>
-    </div>
-  </div>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
 

@@ -1,15 +1,13 @@
-
-
 import React, { useState, useEffect } from 'react';
-import { 
-    CopywritingData, 
-    CopywritingSubSection, 
-    Language, 
-    UserProfile, 
-    CanvasData, 
-    MarketResearchData,
-    PersonasData,
-    TranslationKey
+import {
+  CopywritingData,
+  CopywritingSubSection,
+  Language,
+  UserProfile,
+  CanvasData,
+  MarketResearchData,
+  PersonasData,
+  TranslationKey
 } from '../types';
 import { COPYWRITING_SECTIONS_HELP } from '../constants';
 import { MarketingPlanner } from './Copywriting/MarketingPlanner';
@@ -17,9 +15,10 @@ import { PitchRefiner } from './Copywriting/PitchRefiner';
 import { MarketingStrategyPlanner } from './Copywriting/MarketingStrategyPlanner';
 import { InvestorOnePager } from './Copywriting/InvestorOnePager';
 import { LandingPageBuilder } from './Copywriting/LandingPageBuilder';
-import { FloatingActionButton } from './common/FloatingActionButton'; 
-import { Modal } from './common/Modal'; 
-import { Button } from './common/Button'; 
+import { FloatingActionButton } from './common/FloatingActionButton';
+import { Modal } from './common/Modal';
+import { Button } from './common/Button';
+import { addUserProfileHeader, addPageFooter, addTextWithPageBreaks, MARGIN_MM, LINE_HEIGHT_NORMAL, TITLE_FONT_SIZE, LINE_HEIGHT_TITLE, SECTION_TITLE_FONT_SIZE, LINE_HEIGHT_SECTION_TITLE, TEXT_FONT_SIZE } from '../utils/pdfUtils';
 
 interface CopywritingPageProps {
   initialData: CopywritingData;
@@ -45,7 +44,7 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
   const [activeSubSection, setActiveSubSection] = useState<CopywritingSubSection>(CopywritingSubSection.MARKETING_STRATEGY);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const [isAiModalTriggered, setIsAiModalTriggered] = useState(false); 
+  const [isAiModalTriggered, setIsAiModalTriggered] = useState(false);
 
 
   useEffect(() => {
@@ -63,25 +62,169 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
       setIsSidebarOpen(false);
     }
   };
-  
+
   const openAiModal = () => {
-    setIsAiModalTriggered(true); 
+    setIsAiModalTriggered(true);
   };
-  
+
+  const handleExportAll = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const autoTableModule = await import('jspdf-autotable');
+    const autoTable = autoTableModule.default;
+
+    const doc = new jsPDF();
+    const yRef = { value: MARGIN_MM };
+    let totalPagesRef = { current: doc.getNumberOfPages() };
+
+    addUserProfileHeader(doc, userProfile, yRef, totalPagesRef, t);
+
+    // Main Title
+    doc.setFontSize(TITLE_FONT_SIZE);
+    doc.setFont("helvetica", "bold");
+    addTextWithPageBreaks(doc, t('copywriting_page_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_TITLE, totalPagesRef, t);
+    yRef.value += LINE_HEIGHT_NORMAL;
+
+    // 1. Marketing Strategies
+    doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+    doc.setFont("helvetica", "bold");
+    addTextWithPageBreaks(doc, t('copywriting_strategy_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+    doc.setFontSize(TEXT_FONT_SIZE);
+    doc.setFont("helvetica", "normal");
+
+    if (initialData.marketingStrategies.length > 0) {
+      initialData.marketingStrategies.forEach(strategy => {
+        if (yRef.value > 270) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+
+        doc.setFont("helvetica", "bold");
+        addTextWithPageBreaks(doc, strategy.title, MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        doc.setFont("helvetica", "normal");
+
+        const details = [
+          strategy.objectives ? `${t('strategy_modal_objectives_label')}: ${strategy.objectives}` : null,
+          strategy.tacticsAndChannels ? `${t('strategy_modal_tactics_label')}: ${strategy.tacticsAndChannels}` : null,
+          strategy.timeline ? `${t('strategy_modal_timeline_label')}: ${strategy.timeline}` : null,
+          strategy.budgetAllocation ? `${t('strategy_modal_budget_label')}: ${strategy.budgetAllocation}` : null
+        ].filter(Boolean) as string[];
+
+        details.forEach(detail => {
+          addTextWithPageBreaks(doc, detail, MARGIN_MM + 4, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        });
+        yRef.value += LINE_HEIGHT_NORMAL / 2;
+      });
+    } else {
+      addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+    }
+    yRef.value += LINE_HEIGHT_NORMAL;
+
+    // 2. Content Calendar
+    if (yRef.value > 250) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+    doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+    doc.setFont("helvetica", "bold");
+    addTextWithPageBreaks(doc, t('copywriting_marketing_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+
+    const postsHead = [[t('pdf_marketing_post_title'), t('pdf_platform_label'), t('pdf_scheduled_date_label'), t('pdf_status_label')]];
+    const postsBody = initialData.marketingPosts.map(post => [
+      post.title,
+      post.platform,
+      new Date(post.scheduledDate).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US'),
+      t(`marketing_post_status_${post.status}` as TranslationKey)
+    ]);
+
+    if (postsBody.length > 0) {
+      autoTable(doc, {
+        startY: yRef.value,
+        head: postsHead,
+        body: postsBody,
+        theme: 'grid',
+        headStyles: { fillColor: [17, 138, 178] },
+        styles: { fontSize: 8 }
+      });
+      yRef.value = (doc as any).lastAutoTable.finalY + 10;
+    } else {
+      doc.setFontSize(TEXT_FONT_SIZE);
+      doc.setFont("helvetica", "normal");
+      addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+      yRef.value += LINE_HEIGHT_NORMAL;
+    }
+
+    // 3. Pitches
+    if (yRef.value > 250) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+    doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+    doc.setFont("helvetica", "bold");
+    addTextWithPageBreaks(doc, t('copywriting_pitch_refinement_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+    doc.setFontSize(TEXT_FONT_SIZE);
+    doc.setFont("helvetica", "normal");
+
+    if (initialData.pitches.length > 0) {
+      initialData.pitches.forEach(pitch => {
+        if (yRef.value > 260) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+
+        doc.setFont("helvetica", "bold");
+        addTextWithPageBreaks(doc, `${pitch.title} (${t(pitch.type as TranslationKey, pitch.type)})`, MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        doc.setFont("helvetica", "normal");
+        addTextWithPageBreaks(doc, `${t('pdf_target_audience_label')}: ${pitch.targetAudience}`, MARGIN_MM + 4, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+
+        yRef.value += LINE_HEIGHT_NORMAL / 2;
+        addTextWithPageBreaks(doc, pitch.content, MARGIN_MM + 4, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        yRef.value += LINE_HEIGHT_NORMAL;
+      });
+    } else {
+      addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+      yRef.value += LINE_HEIGHT_NORMAL;
+    }
+
+    // 4. One Pager
+    if (yRef.value > 250) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+    doc.setFontSize(SECTION_TITLE_FONT_SIZE);
+    doc.setFont("helvetica", "bold");
+    addTextWithPageBreaks(doc, t('one_pager_title'), MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
+    doc.setFontSize(TEXT_FONT_SIZE);
+    doc.setFont("helvetica", "normal");
+
+    const onePagerData = [
+      initialData.onePager.traction ? { label: t('one_pager_traction_label'), value: initialData.onePager.traction } : null,
+      initialData.onePager.team ? { label: t('one_pager_team_label'), value: initialData.onePager.team } : null,
+      initialData.onePager.ask ? { label: t('one_pager_ask_label'), value: initialData.onePager.ask } : null,
+      initialData.onePager.generatedBlurb ? { label: t('one_pager_output_title'), value: initialData.onePager.generatedBlurb } : null
+    ].filter(Boolean) as { label: string, value: string }[];
+
+    if (onePagerData.length > 0) {
+      onePagerData.forEach(item => {
+        if (yRef.value > 270) { doc.addPage(); totalPagesRef.current = doc.getNumberOfPages(); yRef.value = MARGIN_MM; }
+
+        doc.setFont("helvetica", "bold");
+        addTextWithPageBreaks(doc, item.label, MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        doc.setFont("helvetica", "normal");
+        addTextWithPageBreaks(doc, item.value, MARGIN_MM + 4, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+        yRef.value += LINE_HEIGHT_NORMAL / 2;
+      });
+    } else {
+      addTextWithPageBreaks(doc, t('no_content_yet_placeholder_pdf'), MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
+    }
+
+    // Finalize
+    for (let i = 1; i <= totalPagesRef.current; i++) {
+      doc.setPage(i);
+      addPageFooter(doc, i, totalPagesRef.current, t);
+    }
+
+    doc.save(`${t('copywriting_page_title', 'copywriting').toLowerCase().replace(/\s/g, '_')}_export.pdf`);
+  };
+
   const renderContent = () => {
-    switch(activeSubSection) {
+    switch (activeSubSection) {
       case CopywritingSubSection.MARKETING_STRATEGY:
         return <MarketingStrategyPlanner
-            copywritingData={initialData}
-            onUpdateData={onUpdateData}
-            strategyData={strategyData}
-            researchData={researchData}
-            personasData={personasData}
-            language={language}
-            t={t}
-            userProfile={userProfile}
-            openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.MARKETING_STRATEGY} 
-            setOpenAiModalFlag={setIsAiModalTriggered} 
+          copywritingData={initialData}
+          onUpdateData={onUpdateData}
+          strategyData={strategyData}
+          researchData={researchData}
+          personasData={personasData}
+          language={language}
+          t={t}
+          userProfile={userProfile}
+          openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.MARKETING_STRATEGY}
+          setOpenAiModalFlag={setIsAiModalTriggered}
         />
       case CopywritingSubSection.MARKETING:
         return <MarketingPlanner
@@ -92,8 +235,8 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
           language={language}
           t={t}
           userProfile={userProfile}
-          openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.MARKETING} 
-          setOpenAiModalFlag={setIsAiModalTriggered} 
+          openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.MARKETING}
+          setOpenAiModalFlag={setIsAiModalTriggered}
         />
       case CopywritingSubSection.PITCH_REFINEMENT:
         return <PitchRefiner
@@ -104,30 +247,30 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
           language={language}
           t={t}
           userProfile={userProfile}
-          openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.PITCH_REFINEMENT} 
-          setOpenAiModalFlag={setIsAiModalTriggered} 
+          openAiModalFlag={isAiModalTriggered && activeSubSection === CopywritingSubSection.PITCH_REFINEMENT}
+          setOpenAiModalFlag={setIsAiModalTriggered}
         />
       case CopywritingSubSection.ONE_PAGER_SUMMARY:
         return <InvestorOnePager
-            copywritingData={initialData}
-            onUpdateData={onUpdateData}
-            strategyData={strategyData}
-            language={language}
-            t={t}
-            userProfile={userProfile}
-            triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.ONE_PAGER_SUMMARY}
-            resetAiTrigger={() => setIsAiModalTriggered(false)}
+          copywritingData={initialData}
+          onUpdateData={onUpdateData}
+          strategyData={strategyData}
+          language={language}
+          t={t}
+          userProfile={userProfile}
+          triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.ONE_PAGER_SUMMARY}
+          resetAiTrigger={() => setIsAiModalTriggered(false)}
         />
       case CopywritingSubSection.LANDING_PAGE_BUILDER:
         return <LandingPageBuilder
-            copywritingData={initialData}
-            onUpdateData={onUpdateData}
-            strategyData={strategyData}
-            language={language}
-            t={t}
-            userProfile={userProfile}
-            triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.LANDING_PAGE_BUILDER}
-            resetAiTrigger={() => setIsAiModalTriggered(false)}
+          copywritingData={initialData}
+          onUpdateData={onUpdateData}
+          strategyData={strategyData}
+          language={language}
+          t={t}
+          userProfile={userProfile}
+          triggerAiGeneration={isAiModalTriggered && activeSubSection === CopywritingSubSection.LANDING_PAGE_BUILDER}
+          resetAiTrigger={() => setIsAiModalTriggered(false)}
         />
       default:
         return null;
@@ -137,7 +280,7 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
 
   return (
     <div className="flex flex-col md:flex-row h-full md:h-[calc(100vh-8rem-2rem)] relative bg-transparent">
-      <aside 
+      <aside
         className={`
           fixed top-20 right-0 w-full h-[calc(100vh-5rem)] bg-slate-800 z-40 p-6 overflow-y-auto shadow-xl transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
@@ -158,13 +301,13 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
                 <li key={sectionHelp.title}>
                   <a
                     href="#"
-                    onClick={(e) => { 
-                      e.preventDefault(); 
+                    onClick={(e) => {
+                      e.preventDefault();
                       handleSubSectionSelect(sectionHelp.title);
                     }}
                     className={`block px-4 py-3 rounded-lg transition-colors duration-200
-                      ${activeSubSection === sectionHelp.title 
-                        ? 'bg-blue-600 text-white font-semibold shadow-md' 
+                      ${activeSubSection === sectionHelp.title
+                        ? 'bg-blue-600 text-white font-semibold shadow-md'
                         : 'hover:bg-slate-700 hover:text-slate-100'
                       }`}
                   >
@@ -175,19 +318,22 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
             })}
           </ul>
         </nav>
+        <div className="mt-8 pt-6 border-t border-slate-700">
+          <Button onClick={handleExportAll} variant="secondary" className="w-full">{t('export_all_button')}</Button>
+        </div>
       </aside>
 
       {/* Main content area */}
       <main className={`flex-grow p-4 md:p-8 bg-transparent shadow-inner overflow-y-auto ${isSidebarOpen && 'md:ml-0'}`}>
         <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-slate-100">{pageTitle}</h2>
-            <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
-                {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
-            </Button>
+          <h2 className="text-3xl font-bold text-slate-100">{pageTitle}</h2>
+          <Button variant="outline" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="md:hidden">
+            {isSidebarOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          </Button>
         </div>
         {renderContent()}
       </main>
-      
+
       <FloatingActionButton
         icon={<HelpIcon className="h-6 w-6" />}
         tooltip={t('copywriting_help_button_tooltip')}
@@ -197,9 +343,9 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
         size="md"
       />
       <FloatingActionButton
-        icon={<SparklesIcon className="h-7 w-7"/>}
+        icon={<SparklesIcon className="h-7 w-7" />}
         tooltip={t('copywriting_ai_button_tooltip')}
-        onClick={openAiModal} 
+        onClick={openAiModal}
         className="bottom-6 right-6 z-30"
         colorClass="bg-blue-600 hover:bg-blue-500"
         size="lg"
@@ -207,7 +353,7 @@ export const CopywritingPage: React.FC<CopywritingPageProps> = ({
 
       <Modal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} title={`${t('mra_help_modal_title_prefix')}: ${pageTitle}`} size="xl">
         <div className="prose prose-sm prose-invert max-w-none text-slate-300 whitespace-pre-line max-h-[70vh] overflow-y-auto pr-2">
-            {currentHelpContent?.explanation[language] || currentHelpContent?.explanation.en}
+          {currentHelpContent?.explanation[language] || currentHelpContent?.explanation.en}
         </div>
       </Modal>
     </div>

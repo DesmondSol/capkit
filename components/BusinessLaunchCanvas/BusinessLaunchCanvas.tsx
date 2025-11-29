@@ -21,14 +21,14 @@ const SectionContentEditor: React.FC<SectionContentEditorProps> = ({ section, co
   const [currentContent, setCurrentContent] = useState(content);
 
   useEffect(() => {
-    setCurrentContent(content); 
+    setCurrentContent(content);
   }, [content]);
 
   const handleSave = () => {
     onSave(section, currentContent);
     setEditing(false);
   };
-  
+
   return (
     <div className="bg-slate-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
       <div className="flex justify-between items-center mb-4">
@@ -36,7 +36,7 @@ const SectionContentEditor: React.FC<SectionContentEditorProps> = ({ section, co
         {!editing && (
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
             {t('edit_button', 'Edit')}
-             <PencilIcon className="ml-2 h-4 w-4" />
+            <PencilIcon className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>
@@ -55,7 +55,7 @@ const SectionContentEditor: React.FC<SectionContentEditorProps> = ({ section, co
         </div>
       ) : (
         <p className="text-slate-300 whitespace-pre-wrap min-h-[60px] prose prose-sm prose-invert max-w-none"> {/* prose-invert for dark mode text styling */}
-            {content || <span className="text-slate-500 italic">{t('no_content_yet_placeholder')}</span>}
+          {content || <span className="text-slate-500 italic">{t('no_content_yet_placeholder')}</span>}
         </p>
       )}
     </div>
@@ -75,7 +75,7 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
-  
+
   const [aiForm, setAiForm] = useState({ idea: '', q1: '', q2: '', q3: '' });
   const [error, setError] = useState<string | null>(null);
 
@@ -84,15 +84,15 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
     const doc = new jsPDF();
     doc.setTextColor(50, 50, 50); // Dark gray for text
     const yRef = { value: MARGIN_MM };
-    const totalPagesRef = { current: doc.getNumberOfPages() }; 
+    const totalPagesRef = { current: doc.getNumberOfPages() };
 
     addUserProfileHeader(doc, userProfile, yRef, totalPagesRef, t);
 
     doc.setFontSize(TITLE_FONT_SIZE);
     doc.setFont("helvetica", "bold");
-    const mainTitleText = `7set Spark - ${t('businessLaunchCanvas_title')}`;
+    const mainTitleText = `CapKit - ${t('businessLaunchCanvas_title')}`;
     addTextWithPageBreaks(doc, mainTitleText, MARGIN_MM, yRef, {}, LINE_HEIGHT_TITLE, totalPagesRef, t);
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     const exportDateText = `${t('exported_on_label')}: ${new Date().toLocaleString(language === 'am' ? 'am-ET' : 'en-US')}`;
@@ -104,14 +104,14 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
       doc.setFont("helvetica", "bold");
       const sectionTitleText = t(section as TranslationKey, section);
       addTextWithPageBreaks(doc, sectionTitleText, MARGIN_MM, yRef, {}, LINE_HEIGHT_SECTION_TITLE, totalPagesRef, t);
-      
+
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       const contentText = canvasData[section] || t('no_content_yet_placeholder_pdf');
       addTextWithPageBreaks(doc, contentText, MARGIN_MM + 2, yRef, {}, LINE_HEIGHT_NORMAL, totalPagesRef, t);
-      yRef.value += LINE_HEIGHT_NORMAL * 0.75; 
+      yRef.value += LINE_HEIGHT_NORMAL * 0.75;
     });
-    
+
     // Ensure last page has a footer
     addPageFooter(doc, totalPagesRef.current, totalPagesRef.current, t);
 
@@ -120,32 +120,32 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
 
   const handleAiGenerate = async () => {
     if (!aiForm.idea.trim()) {
-        setError(t('error_ai_no_idea'));
-        return;
+      setError(t('error_ai_no_idea'));
+      return;
     }
     setIsLoadingAi(true);
     setError(null);
     try {
-        const result = await generateBusinessCanvasContent(
-            aiForm.idea, 
-            aiForm.q1, 
-            aiForm.q2, 
-            aiForm.q3,
-            ALL_CANVAS_SECTIONS,
-            language
-        );
-        if (result) {
-            onMassUpdate(result);
-            setIsAiModalOpen(false);
-            setAiForm({ idea: '', q1: '', q2: '', q3: ''});
-        } else {
-            setError(t('error_ai_failed_generic'));
-        }
-    } catch (e) {
-        console.error(e);
+      const result = await generateBusinessCanvasContent(
+        aiForm.idea,
+        aiForm.q1,
+        aiForm.q2,
+        aiForm.q3,
+        ALL_CANVAS_SECTIONS,
+        language
+      );
+      if (result) {
+        onMassUpdate(result);
+        setIsAiModalOpen(false);
+        setAiForm({ idea: '', q1: '', q2: '', q3: '' });
+      } else {
         setError(t('error_ai_failed_generic'));
+      }
+    } catch (e) {
+      console.error(e);
+      setError(t('error_ai_failed_generic'));
     } finally {
-        setIsLoadingAi(false);
+      setIsLoadingAi(false);
     }
   };
 
@@ -154,24 +154,24 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem-2rem)] relative bg-transparent"> 
+    <div className="flex flex-col h-[calc(100vh-8rem-2rem)] relative bg-transparent">
       <div className="flex-grow p-1 sm:p-4 md:p-6 overflow-y-auto">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
           <h2 className="text-3xl font-bold text-slate-100">{t('businessLaunchCanvas_title')}</h2>
-          <Button onClick={handleExport} variant="primary" leftIcon={<DownloadIcon className="h-5 w-5"/>}>{t('export_all_button')}</Button>
+          <Button onClick={handleExport} variant="primary" leftIcon={<DownloadIcon className="h-5 w-5" />}>{t('export_all_button')}</Button>
         </div>
-        
+
         <div className="space-y-8">
           {ALL_CANVAS_SECTIONS.map(section => (
-              <div key={section} id={`section-${section.replace(/\s+/g, '-')}`}>
-                <SectionContentEditor 
-                    section={section}
-                    content={canvasData[section]}
-                    onSave={onSaveSection}
-                    t={t}
-                    language={language}
-                />
-              </div>
+            <div key={section} id={`section-${section.replace(/\s+/g, '-')}`}>
+              <SectionContentEditor
+                section={section}
+                content={canvasData[section]}
+                onSave={onSaveSection}
+                t={t}
+                language={language}
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -185,7 +185,7 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
         size="md"
       />
       <FloatingActionButton
-        icon={<SparklesIcon className="h-7 w-7"/>}
+        icon={<SparklesIcon className="h-7 w-7" />}
         tooltip={t('ai_assistant_canvas_button_tooltip')}
         onClick={() => setIsAiModalOpen(true)}
         className="bottom-6 right-6 z-30"
@@ -198,19 +198,19 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
         <div className="space-y-5">
           <div>
             <label htmlFor="idea" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_idea_label')}</label>
-            <textarea id="idea" name="idea" rows={3} value={aiForm.idea} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_idea_placeholder')}/>
+            <textarea id="idea" name="idea" rows={3} value={aiForm.idea} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_idea_placeholder')} />
           </div>
           <div>
             <label htmlFor="q1" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q1_label')}</label>
-            <input type="text" id="q1" name="q1" value={aiForm.q1} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q1_placeholder')}/>
+            <input type="text" id="q1" name="q1" value={aiForm.q1} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q1_placeholder')} />
           </div>
           <div>
             <label htmlFor="q2" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q2_label')}</label>
-            <input type="text" id="q2" name="q2" value={aiForm.q2} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q2_placeholder')}/>
+            <input type="text" id="q2" name="q2" value={aiForm.q2} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q2_placeholder')} />
           </div>
           <div>
             <label htmlFor="q3" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q3_label')}</label>
-            <input type="text" id="q3" name="q3" value={aiForm.q3} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q3_placeholder')}/>
+            <input type="text" id="q3" name="q3" value={aiForm.q3} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q3_placeholder')} />
           </div>
           <Button onClick={handleAiGenerate} disabled={isLoadingAi} className="w-full mt-2" variant="primary" size="lg">
             {isLoadingAi ? (

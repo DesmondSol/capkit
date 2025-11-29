@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { BusinessLaunchCanvas } from './components/BusinessLaunchCanvas/BusinessLaunchCanvas';
@@ -190,7 +191,7 @@ const App: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserAuth({ isLoggedIn: true, email: user.email, uid: user.uid, accessLevel: 'full' }); // Default full for now or fetch from DB
-        setIsAuthModalOpen(false);
+        // Do NOT close modal here automatically. Let AuthPage close it after success message.
       } else {
         setUserAuth({ isLoggedIn: false, email: null, uid: null, accessLevel: 'mindset_only' });
         // Reset to defaults on logout
@@ -218,55 +219,62 @@ const App: React.FC = () => {
     const workspaceId = userAuth.uid; // Simple 1:1 user-workspace for now
     const modulesRef = (moduleName: string) => doc(db, 'workspaces', workspaceId, 'modules', moduleName);
 
+    // Error handler to prevent "Uncaught Error" when rules deny access
+    const handleSyncError = (error: any) => {
+        console.error(`Firestore sync error (likely permission denied):`, error);
+        // We avoid crashing the app, but data won't load.
+        // User needs to update Firestore Rules in Firebase Console.
+    };
+
     const subs = [
       onSnapshot(modulesRef('canvas'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['canvas'] = true;
           setCanvasData(doc.data() as CanvasData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('personas'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['personas'] = true;
           setPersonasData(doc.data().data as PersonasData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('marketResearch'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['marketResearch'] = true;
           setMarketResearchData(doc.data() as MarketResearchData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('copywriting'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['copywriting'] = true;
           setCopywritingData(doc.data() as CopywritingData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('mindset'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['mindset'] = true;
           setMindsetData(doc.data() as MindsetData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('productDesign'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['productDesign'] = true;
           setProductDesignData(doc.data() as ProductDesignData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('economics'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['economics'] = true;
           setEconomicsData(doc.data() as EconomicsData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('sales'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['sales'] = true;
           setSalesData(doc.data() as SalesData);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(modulesRef('grow'), (doc) => {
         if (doc.exists()) {
           isRemoteUpdate.current['grow'] = true;
@@ -280,7 +288,7 @@ const App: React.FC = () => {
           };
           setGrowData(mergedGrow);
         }
-      }),
+      }, handleSyncError),
       onSnapshot(doc(db, 'users', userAuth.uid), (doc) => {
           if (doc.exists()) {
               setUserProfile(doc.data() as UserProfile);
@@ -288,9 +296,9 @@ const App: React.FC = () => {
               // Create default profile if not exists
               const defaultProfile: UserProfile = { name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' };
               setUserProfile(defaultProfile);
-              setDoc(doc.ref, defaultProfile, { merge: true });
+              setDoc(doc.ref, defaultProfile, { merge: true }).catch(err => console.error("Error creating user profile:", err));
           }
-      })
+      }, handleSyncError)
     ];
 
     setIsDataLoaded(true);
@@ -314,7 +322,10 @@ const App: React.FC = () => {
         const docRef = doc(db, 'workspaces', workspaceId, 'modules', key);
         // For array roots like PersonasData, we wrap in an object
         const payload = Array.isArray(data) ? { data: data } : data;
-        setDoc(docRef, payload, { merge: true }).catch(console.error);
+        setDoc(docRef, payload, { merge: true }).catch(error => {
+            console.error(`Error saving ${key}:`, error);
+            // Permission error will also be logged here if writing fails
+        });
       }, delay);
 
       return () => clearTimeout(handler);
@@ -350,7 +361,7 @@ const App: React.FC = () => {
   const handleUpdateUserProfile = (profile: UserProfile) => {
     if (userAuth.uid) {
       setUserProfile(profile);
-      setDoc(doc(db, 'users', userAuth.uid), profile, { merge: true });
+      setDoc(doc(db, 'users', userAuth.uid), profile, { merge: true }).catch(console.error);
       setIsUserProfileModalOpen(false);
     }
   };

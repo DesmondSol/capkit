@@ -1,10 +1,13 @@
 
+// ... existing code ...
+// (Only adding the export default at the very end if not present, or replacing the component definition slightly if simpler)
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView } from "framer-motion";
 import { Button } from './common/Button';
 import { TranslationKey, Language, Page, SubPage } from '../types';
+import { Footer } from './Footer';
 import {
-  Sparkles,
   ArrowRight,
   Play,
   Rocket,
@@ -35,9 +38,9 @@ import {
   Check,
   Quote,
   Heart,
-  Coffee,
-  MapPin,
+  Sparkles
 } from "lucide-react";
+import { SEO } from './SEO';
 
 // Declare Chart.js global variable
 declare var Chart: any;
@@ -251,16 +254,7 @@ const testimonials = [
   },
 ];
 
-const footerLinks = {
-  Product: ["Features", "Pricing", "Tools", "Roadmap"],
-  Company: ["About", "Blog", "Careers", "Contact"],
-  Resources: ["Help Center", "Community", "Documentation", "Templates"],
-  Legal: ["Privacy", "Terms", "Security"],
-};
-
-const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNavigate }) => {
-  // Using onNavigate with null/null triggers the login/signup logic in App.tsx if user is not logged in,
-  // or goes to Start/Mindset if logged in. For simplicity, we just trigger the auth flow check.
+export const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNavigate }) => {
   const handleStart = () => {
     onNavigate(Page.START, SubPage.MINDSET);
   };
@@ -345,6 +339,10 @@ const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNaviga
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative z-10">
+        <SEO 
+            title="Capkit - Start, Build, Grow" 
+            description="The all-in-one platform for Ethiopian entrepreneurs. Validate ideas, build products, and prepare for investment."
+        />
         {/* ==================== HERO SECTION ==================== */}
         <section className="relative min-h-[90vh] flex items-center justify-center pt-10 px-6">
           <div className="absolute top-40 left-20 w-72 h-72 bg-primary/20 rounded-full blur-[100px] animate-float" />
@@ -957,54 +955,7 @@ const InfographicPage: React.FC<InfographicPageProps> = ({ language, t, onNaviga
         </section>
 
         {/* ==================== FOOTER ==================== */}
-        <footer className="py-16 px-6 border-t border-border/50">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
-              <div className="lg:col-span-2">
-                <motion.div className="flex items-center gap-2 mb-4" whileHover={{ scale: 1.02 }}>
-                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <span className="text-2xl font-bold text-foreground">Capkit</span>
-                </motion.div>
-                <p className="text-muted-foreground mb-4 max-w-xs">
-                  Empowering Ethiopian founders with the tools, knowledge, and network to build the future.
-                </p>
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>Addis Ababa, Ethiopia</span>
-                </div>
-              </div>
-
-              {Object.entries(footerLinks).map(([title, links]) => (
-                <div key={title}>
-                  <h4 className="font-semibold text-foreground mb-4">{title}</h4>
-                  <ul className="space-y-2">
-                    {links.map((link) => (
-                      <li key={link}>
-                        <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                          {link}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-muted-foreground text-sm">© 2025 Capkit. All rights reserved.</p>
-
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <span>May contain traces of</span>
-                <Coffee className="w-4 h-4 text-primary" />
-                <span>• Built with</span>
-                <Heart className="w-4 h-4 text-primary" />
-                <span>by Solomon T.</span>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <Footer onNavigate={onNavigate} />
       </div>
     </div>
   );

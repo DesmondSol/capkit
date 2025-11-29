@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { BusinessLaunchCanvas } from './components/BusinessLaunchCanvas/BusinessLaunchCanvas';
@@ -16,9 +15,26 @@ import ManagementPage from './components/Grow/ManagementPage';
 import { ChecklistsPage } from './components/Grow/ChecklistsPage';
 import { ComingSoon } from './components/ComingSoon';
 import { UserProfileModal } from './components/UserProfileModal';
-import InfographicPage from './components/InfographicPage';
+import { InfographicPage } from './components/InfographicPage';
 import { AuthPage } from './components/AuthPage';
 import { LockedFeature } from './components/LockedFeature';
+import { FeaturesPage } from './components/ProductPages/FeaturesPage';
+import { ToolsPage } from './components/ProductPages/ToolsPage';
+import { RoadmapPage } from './components/ProductPages/RoadmapPage';
+import { StartupsPage } from './components/StartupsPage';
+import { PrivacyPage } from './components/LegalPages/PrivacyPage';
+import { TermsPage } from './components/LegalPages/TermsPage';
+import { SecurityPage } from './components/LegalPages/SecurityPage';
+import { HelpCenterPage } from './components/ResourcesPages/HelpCenterPage';
+import { CommunityPage } from './components/ResourcesPages/CommunityPage';
+import { DocumentationPage } from './components/ResourcesPages/DocumentationPage';
+import { TemplatesPage } from './components/ResourcesPages/TemplatesPage';
+import { AboutPage } from './components/CompanyPages/AboutPage';
+import { BlogPage } from './components/CompanyPages/BlogPage';
+import { CareersPage } from './components/CompanyPages/CareersPage';
+import { ContactPage } from './components/CompanyPages/ContactPage';
+import { SEO } from './components/SEO';
+import { HelmetProvider } from 'react-helmet-async';
 import { 
     Page, 
     SubPage, 
@@ -89,7 +105,7 @@ const initialMindsetData: MindsetData = {
     '5-year': { self: '', family: '', world: '' },
     '10-year': { self: '', family: '', world: '' },
   },
-  goalsFirstSetDate: undefined,
+  goalsFirstSetDate: null, // Initialize to null, not undefined
   shouldAutoGenerateReport: false,
   goalSettingAiChatHistory: [],
 };
@@ -162,6 +178,7 @@ const initialGrowData: GrowData = {
   }
 };
 
+
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page | null>(null);
   const [activeSubPage, setActiveSubPage] = useState<SubPage | null>(null);
@@ -222,8 +239,6 @@ const App: React.FC = () => {
     // Error handler to prevent "Uncaught Error" when rules deny access
     const handleSyncError = (error: any) => {
         console.error(`Firestore sync error (likely permission denied):`, error);
-        // We avoid crashing the app, but data won't load.
-        // User needs to update Firestore Rules in Firebase Console.
     };
 
     const subs = [
@@ -279,7 +294,6 @@ const App: React.FC = () => {
         if (doc.exists()) {
           isRemoteUpdate.current['grow'] = true;
           const data = doc.data() as GrowData;
-          // Deep merge logic for grow data to ensure new structure keys exist if missing
           const mergedGrow = {
               legal: { ...initialGrowData.legal, ...(data.legal || {}) },
               investment: { ...initialGrowData.investment, ...(data.investment || {}) },
@@ -293,7 +307,6 @@ const App: React.FC = () => {
           if (doc.exists()) {
               setUserProfile(doc.data() as UserProfile);
           } else {
-              // Create default profile if not exists
               const defaultProfile: UserProfile = { name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' };
               setUserProfile(defaultProfile);
               setDoc(doc.ref, defaultProfile, { merge: true }).catch(err => console.error("Error creating user profile:", err));
@@ -320,11 +333,10 @@ const App: React.FC = () => {
       const handler = setTimeout(() => {
         const workspaceId = userAuth.uid!;
         const docRef = doc(db, 'workspaces', workspaceId, 'modules', key);
-        // For array roots like PersonasData, we wrap in an object
-        const payload = Array.isArray(data) ? { data: data } : data;
+        // FIX: Sanitize data to remove 'undefined' which causes Firestore crash
+        const payload = JSON.parse(JSON.stringify(Array.isArray(data) ? { data: data } : data));
         setDoc(docRef, payload, { merge: true }).catch(error => {
             console.error(`Error saving ${key}:`, error);
-            // Permission error will also be logged here if writing fails
         });
       }, delay);
 
@@ -333,7 +345,7 @@ const App: React.FC = () => {
   };
 
   useDebouncedSave('canvas', canvasData);
-  useDebouncedSave('personas', personasData); // Will be saved as { data: [...] }
+  useDebouncedSave('personas', personasData);
   useDebouncedSave('marketResearch', marketResearchData);
   useDebouncedSave('copywriting', copywritingData);
   useDebouncedSave('mindset', mindsetData);
@@ -353,7 +365,6 @@ const App: React.FC = () => {
   };
 
   const handleUnlockSuccess = () => {
-    // This is less relevant with Firebase but can be used for upgrading role field in Firestore user doc
     setUserAuth(prev => ({ ...prev, accessLevel: 'full' }));
     setIsUserProfileModalOpen(false);
   };
@@ -367,6 +378,18 @@ const App: React.FC = () => {
   };
 
   const handleSelectPage = (page: Page | null, subPage: SubPage | null) => {
+    // New pages are accessible without login
+    if ([
+      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS, 
+      Page.PRIVACY, Page.TERMS, Page.SECURITY,
+      Page.HELP_CENTER, Page.COMMUNITY, Page.DOCUMENTATION, Page.TEMPLATES,
+      Page.ABOUT, Page.BLOG, Page.CAREERS, Page.CONTACT
+    ].includes(page as Page)) {
+      setActivePage(page);
+      setActiveSubPage(null);
+      return;
+    }
+
     if (!userAuth.isLoggedIn && page !== null) {
       setIsAuthModalOpen(true);
       return;
@@ -376,11 +399,37 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (activePage === null || (activePage !== null && activeSubPage === null)) {
+    if (activePage === null || (activePage !== null && activeSubPage === null && ![
+      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS, 
+      Page.PRIVACY, Page.TERMS, Page.SECURITY,
+      Page.HELP_CENTER, Page.COMMUNITY, Page.DOCUMENTATION, Page.TEMPLATES,
+      Page.ABOUT, Page.BLOG, Page.CAREERS, Page.CONTACT
+    ].includes(activePage))) {
       return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
     
-    // Simple access check
+    // Public Pages
+    if (activePage === Page.FEATURES) return <FeaturesPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.TOOLS) return <ToolsPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.ROADMAP) return <RoadmapPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.STARTUPS) return <StartupsPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.PRIVACY) return <PrivacyPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.TERMS) return <TermsPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.SECURITY) return <SecurityPage onNavigate={handleSelectPage} />;
+    
+    // Resources Pages
+    if (activePage === Page.HELP_CENTER) return <HelpCenterPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.COMMUNITY) return <CommunityPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.DOCUMENTATION) return <DocumentationPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.TEMPLATES) return <TemplatesPage onNavigate={handleSelectPage} />;
+
+    // Company Pages
+    if (activePage === Page.ABOUT) return <AboutPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.BLOG) return <BlogPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.CAREERS) return <CareersPage onNavigate={handleSelectPage} />;
+    if (activePage === Page.CONTACT) return <ContactPage onNavigate={handleSelectPage} />;
+
+    // Simple access check for restricted pages
     if (userAuth.isLoggedIn && userAuth.accessLevel !== 'full' && activePage !== Page.START) {
          return <LockedFeature onUnlockClick={() => setIsUserProfileModalOpen(true)} t={t} />;
     }
@@ -419,7 +468,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <>
+    <HelmetProvider>
+      <SEO />
       <Navbar
         navItems={NAV_ITEMS}
         onSelectPage={handleSelectPage}
@@ -441,7 +491,7 @@ const App: React.FC = () => {
         <AuthPage 
             isOpen={isAuthModalOpen} 
             onClose={() => setIsAuthModalOpen(false)} 
-            onLoginSuccess={() => setIsAuthModalOpen(false)} // Handled by auth listener
+            onLoginSuccess={() => setIsAuthModalOpen(false)} 
             t={t}
             language={currentLanguage}
         />
@@ -458,7 +508,7 @@ const App: React.FC = () => {
           onUnlockSuccess={handleUnlockSuccess}
         />
       )}
-    </>
+    </HelmetProvider>
   );
 };
 

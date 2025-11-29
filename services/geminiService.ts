@@ -1,23 +1,23 @@
 import { GenerateContentResponse, Part, Type } from "@google/genai";
-import {
-    CanvasData,
-    CanvasSection,
-    ResearchQuestionItem,
-    MarketResearchData,
-    ResearchSection,
-    CompetitorProfile,
-    TrendEntry,
+import { 
+    CanvasData, 
+    CanvasSection, 
+    ResearchQuestionItem, 
+    MarketResearchData, 
+    ResearchSection, 
+    CompetitorProfile, 
+    TrendEntry, 
     ALL_CANVAS_SECTIONS,
     ResearchQuestionnaireSet,
     Language,
-    MarketingPost,
-    Pitch,
-    PitchType,
+    MarketingPost, 
+    Pitch, 
+    PitchType, 
     MarketingPostStatus,
-    MindsetData,
-    AssessmentAnswers,
-    FounderProfileReportData,
-    GoalSettingData,
+    MindsetData, 
+    AssessmentAnswers, 
+    FounderProfileReportData, 
+    GoalSettingData, 
     AssessmentScores,
     TranslationKey,
     Persona,
@@ -30,7 +30,7 @@ import {
     OnePagerData,
     MarketingStrategy
 } from '../types';
-import { API_KEY_WARNING } from "../constants";
+import { API_KEY_WARNING } from "../../constants";
 
 // Note: GoogleGenAI type will be imported dynamically.
 type GoogleGenAI = any;
@@ -59,18 +59,18 @@ const getAiClient = async (): Promise<GoogleGenAI | null> => {
 };
 
 const parseJsonFromText = <T,>(text: string): T | null => {
-    let jsonStr = text.trim();
-    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-    const match = jsonStr.match(fenceRegex);
-    if (match && match[2]) {
-        jsonStr = match[2].trim();
-    }
-    try {
-        return JSON.parse(jsonStr) as T;
-    } catch (e) {
-        console.error("Failed to parse JSON response:", e, "Original text:", text);
-        return null;
-    }
+  let jsonStr = text.trim();
+  const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+  const match = jsonStr.match(fenceRegex);
+  if (match && match[2]) {
+    jsonStr = match[2].trim();
+  }
+  try {
+    return JSON.parse(jsonStr) as T;
+  } catch (e) {
+    console.error("Failed to parse JSON response:", e, "Original text:", text);
+    return null;
+  }
 };
 
 const getAiResponseText = (response: GenerateContentResponse): string | null => {
@@ -101,7 +101,7 @@ const callAi = async (prompt: string, jsonSchema?: any): Promise<string | null> 
             config.responseMimeType = "application/json";
             config.responseSchema = jsonSchema;
         }
-
+        
         const response: GenerateContentResponse = await localAi.models.generateContent({
             model: TEXT_MODEL,
             contents: prompt,
@@ -116,16 +116,16 @@ const callAi = async (prompt: string, jsonSchema?: any): Promise<string | null> 
 };
 
 export const generateBusinessCanvasContent = async (
-    businessIdea: string,
-    problemSolved: string,
-    targetCustomer: string,
-    uniqueSellingProposition: string,
-    sections: CanvasSection[],
-    language: Language
+  businessIdea: string,
+  problemSolved: string,
+  targetCustomer: string,
+  uniqueSellingProposition: string,
+  sections: CanvasSection[],
+  language: Language
 ): Promise<Partial<CanvasData> | null> => {
     const langInstructions = language === 'am'
-        ? "All generated textual content for the sections MUST be in Amharic. The JSON keys themselves MUST remain in English. Provide rich, culturally relevant Amharic content that is practical for an Ethiopian entrepreneur."
-        : "All generated content should be in English and be practical for an Ethiopian entrepreneur.";
+    ? "All generated textual content for the sections MUST be in Amharic. The JSON keys themselves MUST remain in English. Provide rich, culturally relevant Amharic content that is practical for an Ethiopian entrepreneur."
+    : "All generated content should be in English and be practical for an Ethiopian entrepreneur.";
 
     const prompt = `
     You are an AI assistant helping an entrepreneur develop a business plan for Ethiopia.
@@ -162,15 +162,15 @@ export const generateBusinessCanvasContent = async (
 };
 
 export const generateMarketResearchQuestions = async (
-    strategyData: Partial<CanvasData>,
-    researchGoal: string,
-    targetAudience: string,
-    language: Language
+  strategyData: Partial<CanvasData>,
+  researchGoal: string,
+  targetAudience: string,
+  language: Language
 ): Promise<ResearchQuestionItem[]> => {
     const langInstructions = language === 'am'
         ? "The 'text' of each question must be in Amharic."
         : "The 'text' of each question must be in English.";
-
+    
     const prompt = `
     Based on the following business strategy for an Ethiopian venture, generate 5-7 insightful market research questions.
     ${langInstructions}
@@ -195,7 +195,7 @@ export const generateMarketResearchQuestions = async (
             properties: {
                 id: { type: Type.STRING },
                 text: { type: Type.STRING },
-                responses: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, text: { type: Type.STRING } } } }
+                responses: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {id: {type: Type.STRING}, text: {type: Type.STRING}}} }
             }
         }
     };
@@ -208,14 +208,14 @@ export const generateMarketResearchQuestions = async (
 };
 
 export const generateMarketResearchSummary = async (
-    researchData: {
-        [ResearchSection.QUESTIONS]: ResearchQuestionnaireSet[];
-        [ResearchSection.GENERAL_NOTES_IMPORT]: string;
-        [ResearchSection.COMPETITOR_ANALYSIS]: CompetitorProfile[];
-        [ResearchSection.TRENDS]: TrendEntry[];
-    },
-    strategyData: Partial<CanvasData>,
-    language: Language
+  researchData: {
+    [ResearchSection.QUESTIONS]: ResearchQuestionnaireSet[];
+    [ResearchSection.GENERAL_NOTES_IMPORT]: string;
+    [ResearchSection.COMPETITOR_ANALYSIS]: CompetitorProfile[];
+    [ResearchSection.TRENDS]: TrendEntry[];
+  },
+  strategyData: Partial<CanvasData>,
+  language: Language
 ): Promise<string | null> => {
     const prompt = `
     Synthesize all the provided market research data for an Ethiopian business into a cohesive summary.
@@ -288,7 +288,7 @@ export const generateMarketingPlan = async (
 
     const textResponse = await callAi(prompt, schema);
     if (!textResponse) return [];
-
+    
     const parsed = parseJsonFromText<MarketingPost[]>(textResponse);
     return parsed ? parsed.map(p => ({ ...p, id: `ai-post-${Date.now()}-${Math.random()}` })) : [];
 };
@@ -329,7 +329,7 @@ export const generatePitchContent = async (
 export const askAiMindsetCoach = async (
     goals: GoalSettingData,
     userInput: string,
-    history: { role: 'user' | 'model'; parts: { text: string }[] }[],
+    history: { role: 'user' | 'model'; parts: {text: string}[] }[],
     language: Language
 ): Promise<string> => {
     const langInstructions = language === 'am' ? "Reply in Amharic." : "Reply in English.";
@@ -344,7 +344,7 @@ export const askAiMindsetCoach = async (
     
     Provide concise, motivating, and actionable advice.
     `;
-
+    
     // In a real implementation, we would pass 'history' to the chat model.
     // For this single-turn helper, we prepend context.
     return (await callAi(context)) || "";
@@ -375,7 +375,7 @@ export const generateFounderProfileReport = async (
         properties: {
             founderTypeTitle: { type: Type.STRING },
             founderTypeDescription: { type: Type.STRING },
-            scores: {
+            scores: { 
                 type: Type.OBJECT,
                 properties: {
                     riskTolerance: { type: Type.NUMBER }, leadership: { type: Type.NUMBER }, adaptability: { type: Type.NUMBER },
@@ -392,7 +392,7 @@ export const generateFounderProfileReport = async (
 
     const textResponse = await callAi(prompt, schema);
     if (!textResponse) return null;
-
+    
     const parsed = parseJsonFromText<FounderProfileReportData>(textResponse);
     if (parsed) {
         parsed.generatedDate = new Date().toISOString();
@@ -433,8 +433,8 @@ export const generateAiPersona = async (
             likes: { type: Type.STRING },
             dislikes: { type: Type.STRING },
             skills: { type: Type.STRING },
-            personality: { type: Type.OBJECT, properties: { analyticalCreative: { type: Type.NUMBER }, busyTimeRich: { type: Type.NUMBER }, messyOrganized: { type: Type.NUMBER }, independentTeamPlayer: { type: Type.NUMBER } } },
-            traits: { type: Type.OBJECT, properties: { buyingAuthority: { type: Type.NUMBER }, technical: { type: Type.NUMBER }, socialMedia: { type: Type.NUMBER }, selfHelping: { type: Type.NUMBER } } },
+            personality: { type: Type.OBJECT, properties: { analyticalCreative: {type: Type.NUMBER}, busyTimeRich: {type: Type.NUMBER}, messyOrganized: {type: Type.NUMBER}, independentTeamPlayer: {type: Type.NUMBER} } },
+            traits: { type: Type.OBJECT, properties: { buyingAuthority: {type: Type.NUMBER}, technical: {type: Type.NUMBER}, socialMedia: {type: Type.NUMBER}, selfHelping: {type: Type.NUMBER} } },
         }
     };
 
@@ -445,7 +445,7 @@ export const generateAiPersona = async (
 export const generateProductFeatures = async (
     canvasData: Partial<CanvasData>,
     language: Language
-): Promise<Array<{ name: string, priority: FeaturePriority, description: string, problemSolved: string }> | null> => {
+): Promise<Array<{name: string, priority: FeaturePriority, description: string, problemSolved: string}> | null> => {
     const langInstructions = language === 'am' ? "Content in Amharic." : "Content in English.";
     const prompt = `
     Suggest 5 key product features based on this Business Canvas:
@@ -474,12 +474,12 @@ export const processBulkFeedback = async (
     bulkText: string,
     features: ProductFeature[],
     language: Language
-): Promise<Array<{ content: string, source: any, urgency: FeedbackUrgency, featureId: string | null }> | null> => {
+): Promise<Array<{content: string, source: any, urgency: FeedbackUrgency, featureId: string | null}> | null> => {
     const langInstructions = language === 'am' ? "Process in Amharic context." : "Process in English context.";
     const prompt = `
     Analyze this raw user feedback and split it into distinct items. 
     Map each item to an existing feature if relevant.
-    Existing Features: ${JSON.stringify(features.map(f => ({ id: f.id, name: f.name })))}
+    Existing Features: ${JSON.stringify(features.map(f => ({id: f.id, name: f.name})))}
     
     Feedback: ${bulkText}
     ${langInstructions}
@@ -611,7 +611,7 @@ export const generateOnePagerBlurb = async (
     Business Info: ${JSON.stringify(strategyData)}
     ${langInstructions}
     `;
-
+    
     return await callAi(prompt);
 };
 
@@ -626,7 +626,7 @@ export const generateLandingPageHtml = async (
     
     Return ONLY the raw HTML code.
     `;
-
+    
     // Using a simpler model call as we want raw text (code), not JSON structure usually.
     // However, sticking to consistent helper.
     const text = await callAi(prompt);

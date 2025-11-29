@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './common/Button';
-import { Page, SubPage } from '../../types';
-import { 
-  Rocket, 
-  MapPin, 
-  TrendingUp, 
-  Users, 
-  ArrowRight, 
+import { Page, SubPage } from '../types';
+import {
+  Rocket,
+  MapPin,
+  TrendingUp,
+  Users,
+  ArrowRight,
   ExternalLink,
   Search
 } from 'lucide-react';
@@ -93,8 +93,8 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
 
   const filteredStartups = startupsData.filter(startup => {
     const matchesSector = activeSector === "All" || startup.sector === activeSector;
-    const matchesSearch = startup.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          startup.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = startup.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      startup.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSector && matchesSearch;
   });
 
@@ -127,25 +127,24 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10 bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input 
-              type="text" 
-              placeholder="Search startups..." 
+            <input
+              type="text"
+              placeholder="Search startups..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
-          
+
           <div className="flex flex-wrap gap-2 justify-center">
             {sectors.map(sector => (
               <button
                 key={sector}
                 onClick={() => setActiveSector(sector)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  activeSector === sector 
-                    ? 'bg-blue-600 text-white' 
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeSector === sector
+                    ? 'bg-blue-600 text-white'
                     : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
-                }`}
+                  }`}
               >
                 {sector}
               </button>
@@ -169,19 +168,19 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
                     {startup.initials}
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border
-                    ${startup.stage === 'Seed' || startup.stage === 'Series A' 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                    ${startup.stage === 'Seed' || startup.stage === 'Series A'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                       : 'bg-slate-700 text-slate-400 border-slate-600'
                     }`}
                   >
                     {startup.stage}
                   </span>
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-slate-100 mb-1">{startup.name}</h3>
                 <p className="text-blue-400 text-sm font-medium mb-3">{startup.tagline}</p>
                 <p className="text-slate-400 text-sm mb-4 line-clamp-3">{startup.description}</p>
-                
+
                 <div className="flex flex-wrap gap-2 mb-4">
                   <span className="flex items-center text-xs text-slate-500 bg-slate-900/50 px-2 py-1 rounded-md">
                     <TrendingUp className="w-3 h-3 mr-1" /> {startup.sector}
@@ -191,7 +190,7 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="px-6 py-4 bg-slate-800/50 border-t border-slate-700 flex justify-between items-center group-hover:bg-slate-700/30 transition-colors">
                 <span className="text-xs text-slate-500">Backed by Capkit</span>
                 <button className="text-sm font-medium text-slate-300 group-hover:text-white flex items-center transition-colors">
@@ -205,7 +204,7 @@ export const StartupsPage: React.FC<StartupsPageProps> = ({ onNavigate }) => {
         {filteredStartups.length === 0 && (
           <div className="text-center py-20 text-slate-500">
             <p className="text-xl">No startups found.</p>
-            <button 
+            <button
               onClick={() => { setSearchQuery(""); setActiveSector("All"); }}
               className="text-blue-400 hover:underline mt-2"
             >

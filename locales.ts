@@ -111,6 +111,17 @@ export const translations: Record<Language, Partial<LocalizedContent>> = {
     sidebar_copywriting_onepager: 'One-Pager',
     sidebar_copywriting_landing_page: 'Landing Page',
 
+
+    // Terms and Disclaimer
+    terms_modal_title: "Welcome to Capkit",
+    terms_section_title: "Terms & Conditions",
+    terms_section_content: "By using Capkit, you agree to our Terms of Service and Privacy Policy. You acknowledge that you are responsible for maintaining the confidentiality of your account.",
+    terms_ai_disclaimer_title: "AI Disclaimer",
+    terms_ai_disclaimer_content: "Capkit uses artificial intelligence (AI) to generate content, suggestions, and analysis. While we strive for accuracy, AI models can produce incorrect or misleading information. The output provided by Capkit is for advisory purposes only and should not be considered professional financial, legal, or business advice. You are responsible for verifying all AI-generated content and making your own independent decisions.",
+    terms_agree_checkbox: "I adhere to the Terms of Service and Privacy Policy.",
+    terms_ai_agree_checkbox: "I understand the limitations of AI and agree to verify all generated information.",
+    terms_accept_button: "Accept & Continue",
+
     // Grow Page Explanations
     grow_legal_explanation: "Navigate the legal landscape with tools to automate essential documents and manage compliance.",
     grow_investment_explanation: "Streamline fundraising and equity management with cap table and investor relationship tools.",
@@ -1296,9 +1307,9 @@ export const translations: Record<Language, Partial<LocalizedContent>> = {
     personas_help_frustrations_desc: 'What are their main pain points that your product can solve?',
     personas_help_jtbd_title: 'Jobs To Be Done (JTBD)',
     personas_help_jtbd_desc: "This framework helps uncover the real motivations behind a purchase. Fill in the blanks: 'When [situation], I want to [motivation], so I can [expected outcome].' This reveals the core 'job' your customer is 'hiring' your product to do.",
-  
-  //login section help
-auth_login_title: 'Welcome',
+
+    //login section help
+    auth_login_title: 'Welcome',
     auth_login_subtitle: "Sign in to continue",
     auth_signup_title: "SIgn up",
     auth_signup_subtitle: "Join Founders Community",
@@ -1406,6 +1417,17 @@ auth_login_title: 'Welcome',
     sidebar_copywriting_pitch: 'የሀሳብ ማቅረቢያዎች',
     sidebar_copywriting_onepager: 'ባለአንድ ገጽ',
     sidebar_copywriting_landing_page: 'ማረፊያ ገጽ',
+
+
+    // Terms and Disclaimer - Amharic
+    terms_modal_title: "ወደ Capkit እንኳን በደህና መጡ",
+    terms_section_title: "ውሎች እና ሁኔታዎች",
+    terms_section_content: "Capkitን በመጠቀም በአገልግሎት ውላችን እና በግላዊነት ፖሊሲያችን ይስማማሉ። የመለያዎን ሚስጥራዊነት የመጠበቅ ሃላፊነት የእርስዎ ነው።",
+    terms_ai_disclaimer_title: "የAI ማስተባበያ",
+    terms_ai_disclaimer_content: "Capkit ይዘትን፣ ጥቆማዎችን እና ትንታኔዎችን ለማመንጨት አርቴፊሻል ኢንተለጀንስ (AI) ይጠቀማል። ለትክክለኛነት የምንጥር ቢሆንም፣ የAI ሞዴሎች የተሳሳተ ወይም አሳሳች መረጃ ሊሰጡ ይችላሉ። በCapkit የቀረበው ውጤት ለምክር ዓላማ ብቻ ነው እና እንደ ሙያዊ የፋይናንስ፣ የህግ ወይም የንግድ ምክር ተደርጎ ሊወሰድ አይገባም። ሁሉንም በAI የተፈጠሩ ይዘቶችን የማረጋገጥ እና የራስዎን ነጻ ውሳኔ የመስጠት ሃላፊነት የእርስዎ ነው።",
+    terms_agree_checkbox: "በአገልግሎት ውሉ እና በግላዊነት ፖሊሲው እስማማለሁ።",
+    terms_ai_agree_checkbox: "የAI ገደቦችን እረዳለሁ እና ሁሉንም የመነጨ መረጃ ለማረጋገጥ እስማማለሁ።",
+    terms_accept_button: "ተቀበል እና ቀጥል",
 
     grow_legal_explanation: "አስፈላጊ ሰነዶችን በራስ ሰር ለመስራት እና ህጋዊ ተገዢነትን ለማስተዳደር በሚረዱ መሳሪያዎች ህጋዊውን መልክዓ ምድር ያስሱ።",
     grow_investment_explanation: "በካፒታል ሠንጠረዥ እና በባለሀብቶች ግንኙነት መሳሪያዎች የገንዘብ ማሰባሰብን እና የፍትሃዊነት አስተዳደርን ያቀላጥፉ።",
@@ -1789,7 +1811,7 @@ auth_login_title: 'Welcome',
     checklist_rl_item_metrics_1: "የሰሜን ኮከብ መለኪያ ተገልጿል?",
     checklist_rl_item_metrics_2: "መለኪያዎችን እና KPIs ለመለካት መሳሪያዎች በቦታው ላይ ናቸው?",
     checklist_rl_item_metrics_3: "የ GA ማስጀመሪያ የስኬት መለኪያዎች ተገልጸዋል?",
-    
+
     checklist_rl_card_press: "Press",
     checklist_rl_item_press_1: "የPR ኤጀንሲ ተሳትፏል?",
     checklist_rl_item_press_2: "የጋዜጣዊ መግለጫ ታቅዷል?",
@@ -2466,7 +2488,7 @@ auth_login_title: 'Welcome',
     jtbd_motivation_label: 'ተነሳሽነት',
     jtbd_motivation_prompt: '... እፈልጋለሁ',
     jtbd_motivation_placeholder: '...ቅጣቶችን ለማስወገድ እና ጊዜ ለመቆጠብ',
-     jtbd_outcome_label: 'የሚጠበቅ ውጤት',
+    jtbd_outcome_label: 'የሚጠበቅ ውጤት',
     jtbd_outcome_prompt: '...እንድችል',
     jtbd_outcome_placeholder: '...ንግዴን በማሳደግ ላይ ለማተኮር።',
     jtbd_emotional_job_label: 'ስሜታዊ ሥራ',
@@ -2569,7 +2591,7 @@ auth_login_title: 'Welcome',
     landing_page_download_button: ".html አውርድ",
     landing_page_no_code: "እስካሁን ምንም ኮድ አልተፈጠረም። ለመጀመር 'ፍጠር'ን ጠቅ ያድርጉ።",
 
-     auth_login_title: "እንኳን በደህና መጡ",
+    auth_login_title: "እንኳን በደህና መጡ",
     auth_login_subtitle: "ጉዞዎን ለመቀጠል ይግቡ።",
     auth_signup_title: "መለያ ይፍጠሩ",
     auth_signup_subtitle: "የመስራቾችን ማህበረሰብ ይቀላቀሉ።",

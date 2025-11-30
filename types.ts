@@ -1,4 +1,3 @@
-
 // This file contains all the core type definitions for the application.
 
 export type Language = 'en' | 'am';
@@ -6,38 +5,38 @@ export type Language = 'en' | 'am';
 // --- ENUMS for Navigation and Sections ---
 
 export enum Page {
-  START = 'Start',
-  BUILD = 'Build',
-  GROW = 'Grow',
-  FEATURES = 'Features',
-  TOOLS = 'Tools',
-  ROADMAP = 'Roadmap',
-  STARTUPS = 'Startups',
-  PRIVACY = 'Privacy',
-  TERMS = 'Terms',
-  SECURITY = 'Security',
-  HELP_CENTER = 'Help Center',
-  COMMUNITY = 'Community',
-  DOCUMENTATION = 'Documentation',
-  TEMPLATES = 'Templates',
-  ABOUT = 'About',
-  BLOG = 'Blog',
-  CAREERS = 'Careers',
-  CONTACT = 'Contact',
+    START = 'Start',
+    BUILD = 'Build',
+    GROW = 'Grow',
+    FEATURES = 'Features',
+    TOOLS = 'Tools',
+    ROADMAP = 'Roadmap',
+    STARTUPS = 'Startups',
+    PRIVACY = 'Privacy',
+    TERMS = 'Terms',
+    SECURITY = 'Security',
+    HELP_CENTER = 'Help Center',
+    COMMUNITY = 'Community',
+    DOCUMENTATION = 'Documentation',
+    TEMPLATES = 'Templates',
+    ABOUT = 'About',
+    BLOG = 'Blog',
+    CAREERS = 'Careers',
+    CONTACT = 'Contact',
 }
 
 export enum SubPage {
-  MINDSET = 'Mindset',
-  STRATEGY = 'Strategy',
-  RESEARCH = 'Research',
-  COPYWRITING = 'Copywriting',
-  PRODUCT_DESIGN = 'Product Design',
-  ECONOMICS = 'Economics',
-  SALES = 'Sales',
-  LEGAL = 'Legal',
-  INVESTMENT = 'Investment',
-  MANAGEMENT = 'Management',
-  CHECKLISTS = 'Checklists',
+    MINDSET = 'Mindset',
+    STRATEGY = 'Strategy',
+    RESEARCH = 'Research',
+    COPYWRITING = 'Copywriting',
+    PRODUCT_DESIGN = 'Product Design',
+    ECONOMICS = 'Economics',
+    SALES = 'Sales',
+    LEGAL = 'Legal',
+    INVESTMENT = 'Investment',
+    MANAGEMENT = 'Management',
+    CHECKLISTS = 'Checklists',
 }
 
 export enum StrategySubSection {
@@ -76,17 +75,17 @@ export enum ResearchSection {
 }
 
 export enum CopywritingSubSection {
-  MARKETING_STRATEGY = "Marketing Strategy",
-  MARKETING = "Marketing Content & Plans",
-  PITCH_REFINEMENT = "Pitch Refinement",
-  ONE_PAGER_SUMMARY = "Investor One-Pager",
-  LANDING_PAGE_BUILDER = "Landing Page Builder",
+    MARKETING_STRATEGY = "Marketing Strategy",
+    MARKETING = "Marketing Content & Plans",
+    PITCH_REFINEMENT = "Pitch Refinement",
+    ONE_PAGER_SUMMARY = "Investor One-Pager",
+    LANDING_PAGE_BUILDER = "Landing Page Builder",
 }
 
 export enum MindsetSubSection {
-  ENTREPRENEURIAL_ASSESSMENT = "Entrepreneurial Assessment",
-  PROFILE_REPORT = "Profile Report",
-  GOAL_SETTING = "Goal Setting",
+    ENTREPRENEURIAL_ASSESSMENT = "Entrepreneurial Assessment",
+    PROFILE_REPORT = "Profile Report",
+    GOAL_SETTING = "Goal Setting",
 }
 
 export enum ProductDesignSubSection {
@@ -139,7 +138,7 @@ export enum ChecklistTool {
 // --- Data Structures ---
 
 export type CanvasData = {
-  [key in CanvasSection]: string;
+    [key in CanvasSection]: string;
 };
 
 // ... Personas ...
@@ -252,10 +251,10 @@ export interface Pitch {
     notes?: string;
 }
 export interface OnePagerData {
-  traction: string;
-  team: string;
-  ask: string;
-  generatedBlurb: string;
+    traction: string;
+    team: string;
+    ask: string;
+    generatedBlurb: string;
 }
 export interface MarketingStrategy {
     id: string;
@@ -300,13 +299,13 @@ export type GoalTimeframe = '6-month' | '2-year' | '5-year' | '10-year';
 export interface GoalDetail { self: string; family: string; world: string; }
 export type GoalSettingData = Record<GoalTimeframe, GoalDetail>;
 export interface MindsetData {
-  assessmentAnswers: AssessmentAnswers;
-  assessmentStatus: Record<AssessmentCategory, AssessmentStatus>;
-  profileReport: FounderProfileReportData | null;
-  goals: GoalSettingData;
-  goalsFirstSetDate?: string | null;
-  shouldAutoGenerateReport: boolean;
-  goalSettingAiChatHistory: { role: 'user' | 'model'; parts: {text: string}[] }[];
+    assessmentAnswers: AssessmentAnswers;
+    assessmentStatus: Record<AssessmentCategory, AssessmentStatus>;
+    profileReport: FounderProfileReportData | null;
+    goals: GoalSettingData;
+    goalsFirstSetDate?: string | null;
+    shouldAutoGenerateReport: boolean;
+    goalSettingAiChatHistory: { role: 'user' | 'model'; parts: { text: string }[] }[];
 }
 
 // ... Product Design ...
@@ -389,7 +388,15 @@ export interface GrowSectionHelpTool { tool: LegalTool | InvestmentTool | Manage
 export interface GrowSectionHelp extends Omit<SectionHelp, 'explanationKey'> { title: GrowSection; explanationKey: TranslationKey; tools: GrowSectionHelpTool[]; }
 
 // --- User & Auth ---
-export interface UserProfile { name: string; email?: string; phone?: string; otherDetails?: string; photo?: string | null; }
+export interface UserProfile {
+    name: string;
+    email?: string;
+    phone?: string;
+    otherDetails?: string;
+    photo?: string | null;
+    termsAccepted?: boolean;
+    termsAcceptedAt?: string;
+}
 export interface UserAuthData {
     email: string;
     name: string;
@@ -405,7 +412,7 @@ export interface Testimonial { id: string; authorName: string; authorTitle: stri
 
 // --- Translation Keys ---
 export type TranslationKey =
-  | Page | SubPage | CanvasSection | ResearchSection | CopywritingSubSection | MindsetSubSection
-  | ProductDesignSubSection | EconomicsSubSection | SalesSubSection | StrategySubSection | GrowSection
-  | LegalTool | InvestmentTool | ManagementTool | ChecklistTool | CostCategory | RevenueCategory
-  | string;
+    | Page | SubPage | CanvasSection | ResearchSection | CopywritingSubSection | MindsetSubSection
+    | ProductDesignSubSection | EconomicsSubSection | SalesSubSection | StrategySubSection | GrowSection
+    | LegalTool | InvestmentTool | ManagementTool | ChecklistTool | CostCategory | RevenueCategory
+    | string;

@@ -15,6 +15,7 @@ import ManagementPage from './components/Grow/ManagementPage';
 import { ChecklistsPage } from './components/Grow/ChecklistsPage';
 import { ComingSoon } from './components/ComingSoon';
 import { UserProfileModal } from './components/UserProfileModal';
+import { TermsAgreementModal } from './components/TermsAgreementModal';
 import { InfographicPage } from './components/InfographicPage';
 import { AuthPage } from './components/AuthPage';
 import { LockedFeature } from './components/LockedFeature';
@@ -35,31 +36,31 @@ import { CareersPage } from './components/CompanyPages/CareersPage';
 import { ContactPage } from './components/CompanyPages/ContactPage';
 import { SEO } from './components/SEO';
 import { HelmetProvider } from 'react-helmet-async';
-import { 
-    Page, 
-    SubPage, 
-    CanvasData, 
-    ALL_CANVAS_SECTIONS, 
-    CanvasSection, 
-    Language, 
-    UserProfile, 
-    MarketResearchData, 
-    ResearchSection,
-    CopywritingData,
-    MindsetData,
-    PersonasData,
-    ProductDesignData,
-    EconomicsData,
-    SalesData,
-    GrowData,
-    TranslationKey,
-    UserAuthData
+import {
+  Page,
+  SubPage,
+  CanvasData,
+  ALL_CANVAS_SECTIONS,
+  CanvasSection,
+  Language,
+  UserProfile,
+  MarketResearchData,
+  ResearchSection,
+  CopywritingData,
+  MindsetData,
+  PersonasData,
+  ProductDesignData,
+  EconomicsData,
+  SalesData,
+  GrowData,
+  TranslationKey,
+  UserAuthData
 } from './types';
 import { NAV_ITEMS } from './constants';
 import { getTranslator } from './locales';
 import { auth, db } from './components/firebase';
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
 const initialCanvasData: CanvasData = ALL_CANVAS_SECTIONS.reduce((acc, section) => {
   acc[section] = "";
@@ -67,7 +68,7 @@ const initialCanvasData: CanvasData = ALL_CANVAS_SECTIONS.reduce((acc, section) 
 }, {} as CanvasData);
 
 const initialMarketResearchData: MarketResearchData = {
-  [ResearchSection.QUESTIONS]: [], 
+  [ResearchSection.QUESTIONS]: [],
   [ResearchSection.GENERAL_NOTES_IMPORT]: "",
   [ResearchSection.COMPETITOR_ANALYSIS]: [],
   [ResearchSection.TRENDS]: [],
@@ -105,7 +106,7 @@ const initialMindsetData: MindsetData = {
     '5-year': { self: '', family: '', world: '' },
     '10-year': { self: '', family: '', world: '' },
   },
-  goalsFirstSetDate: null, // Initialize to null, not undefined
+  goalsFirstSetDate: null,
   shouldAutoGenerateReport: false,
   goalSettingAiChatHistory: [],
 };
@@ -120,47 +121,47 @@ const initialProductDesignData: ProductDesignData = {
 };
 
 const initialEconomicsData: EconomicsData = {
-    costs: [],
-    revenues: [],
-    unitEconomics: {
-      avgRevenue: '',
-      cogs: '',
-      cac: '',
-      customerLifetime: '',
+  costs: [],
+  revenues: [],
+  unitEconomics: {
+    avgRevenue: '',
+    cogs: '',
+    cac: '',
+    customerLifetime: '',
+  },
+  burnRate: {
+    startingCapital: '',
+    additionalHiringSpend: '',
+    additionalMarketingSpend: '',
+  },
+  financialProjection: {
+    inputs: {
+      startingCapital: '',
+      products: [],
+      salesGrowthRate: '',
+      monthlyRevenue: '',
+      monthlyExpenses: '',
     },
-    burnRate: {
-        startingCapital: '',
-        additionalHiringSpend: '',
-        additionalMarketingSpend: '',
-    },
-    financialProjection: {
-      inputs: {
-        startingCapital: '',
-        products: [],
-        salesGrowthRate: '',
-        monthlyRevenue: '',
-        monthlyExpenses: '',
-      },
-      result: null,
-    }
+    result: null,
+  }
 };
 
 const initialSalesData: SalesData = {
-    launchSequence: [],
-    crmLeads: [],
+  launchSequence: [],
+  crmLeads: [],
 };
 
 const initialGrowData: GrowData = {
   legal: {
     documents: [],
     complianceItems: [
-        { id: 'comp-1', name: 'Business Registration & Licensing', status: 'pending', notes: 'Register company name and obtain principal registration certificate from Ministry of Trade and Industry (MoTI).'},
-        { id: 'comp-2', name: 'Tax Identification Number (TIN)', status: 'pending', notes: 'Obtain TIN from the Ethiopian Revenue and Customs Authority (ERCA). This is mandatory for all businesses.'},
-        { id: 'comp-3', name: 'Value Added Tax (VAT) Registration', status: 'pending', notes: 'Register for VAT if annual turnover is expected to exceed ETB 1,000,000.'},
-        { id: 'comp-4', name: 'Employment Contracts', status: 'pending', notes: 'Ensure all employment contracts comply with the Ethiopian Labour Proclamation No. 1156/2019.'},
-        { id: 'comp-5', name: 'Private Organization Employees Pension Fund', status: 'pending', notes: 'Register and contribute for all permanent employees. Contribution is 7% from employer and 11% from employee.'},
-        { id: 'comp-6', name: 'Business Bank Account', status: 'pending', notes: 'Open a dedicated commercial bank account for all business transactions.'},
-        { id: 'comp-7', name: 'Intellectual Property (IP) Protection', status: 'pending', notes: 'Consider registering trademarks, patents, or copyrights with the Ethiopian Intellectual Property Office (EIPO).'},
+      { id: 'comp-1', name: 'Business Registration & Licensing', status: 'pending', notes: 'Register company name and obtain principal registration certificate from Ministry of Trade and Industry (MoTI).' },
+      { id: 'comp-2', name: 'Tax Identification Number (TIN)', status: 'pending', notes: 'Obtain TIN from the Ethiopian Revenue and Customs Authority (ERCA). This is mandatory for all businesses.' },
+      { id: 'comp-3', name: 'Value Added Tax (VAT) Registration', status: 'pending', notes: 'Register for VAT if annual turnover is expected to exceed ETB 1,000,000.' },
+      { id: 'comp-4', name: 'Employment Contracts', status: 'pending', notes: 'Ensure all employment contracts comply with the Ethiopian Labour Proclamation No. 1156/2019.' },
+      { id: 'comp-5', name: 'Private Organization Employees Pension Fund', status: 'pending', notes: 'Register and contribute for all permanent employees. Contribution is 7% from employer and 11% from employee.' },
+      { id: 'comp-6', name: 'Business Bank Account', status: 'pending', notes: 'Open a dedicated commercial bank account for all business transactions.' },
+      { id: 'comp-7', name: 'Intellectual Property (IP) Protection', status: 'pending', notes: 'Consider registering trademarks, patents, or copyrights with the Ethiopian Intellectual Property Office (EIPO).' },
     ],
   },
   investment: {
@@ -185,6 +186,7 @@ const App: React.FC = () => {
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userAuth, setUserAuth] = useState<{ isLoggedIn: boolean; email: string | null; uid: string | null; accessLevel: 'full' | 'mindset_only' }>({ isLoggedIn: false, email: null, uid: null, accessLevel: 'mindset_only' });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -233,12 +235,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!userAuth.uid) return;
 
-    const workspaceId = userAuth.uid; // Simple 1:1 user-workspace for now
+    const workspaceId = userAuth.uid;
     const modulesRef = (moduleName: string) => doc(db, 'workspaces', workspaceId, 'modules', moduleName);
 
-    // Error handler to prevent "Uncaught Error" when rules deny access
     const handleSyncError = (error: any) => {
-        console.error(`Firestore sync error (likely permission denied):`, error);
+      console.error(`Firestore sync error (likely permission denied):`, error);
     };
 
     const subs = [
@@ -295,22 +296,33 @@ const App: React.FC = () => {
           isRemoteUpdate.current['grow'] = true;
           const data = doc.data() as GrowData;
           const mergedGrow = {
-              legal: { ...initialGrowData.legal, ...(data.legal || {}) },
-              investment: { ...initialGrowData.investment, ...(data.investment || {}) },
-              management: { ...initialGrowData.management, ...(data.management || {}) },
-              checklists: { ...initialGrowData.checklists, ...(data.checklists || {}) },
+            legal: { ...initialGrowData.legal, ...(data.legal || {}) },
+            investment: { ...initialGrowData.investment, ...(data.investment || {}) },
+            management: { ...initialGrowData.management, ...(data.management || {}) },
+            checklists: { ...initialGrowData.checklists, ...(data.checklists || {}) },
           };
           setGrowData(mergedGrow);
         }
       }, handleSyncError),
-      onSnapshot(doc(db, 'users', userAuth.uid), (doc) => {
-          if (doc.exists()) {
-              setUserProfile(doc.data() as UserProfile);
-          } else {
-              const defaultProfile: UserProfile = { name: auth.currentUser?.displayName || '', email: auth.currentUser?.email || '' };
-              setUserProfile(defaultProfile);
-              setDoc(doc.ref, defaultProfile, { merge: true }).catch(err => console.error("Error creating user profile:", err));
+      onSnapshot(doc(db, 'users', userAuth.uid), (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data() as UserProfile;
+          setUserProfile(data);
+          // Check if terms are accepted
+          if (!data.termsAccepted) {
+            setIsTermsModalOpen(true);
           }
+        } else {
+          const defaultProfile: UserProfile = {
+            name: auth.currentUser?.displayName || '',
+            email: auth.currentUser?.email || '',
+            // termsAccepted is undefined, which will trigger the modal
+          };
+          setUserProfile(defaultProfile);
+          setDoc(docSnapshot.ref, defaultProfile, { merge: true }).catch(err => console.error("Error creating user profile:", err));
+          // Trigger modal for new user
+          setIsTermsModalOpen(true);
+        }
       }, handleSyncError)
     ];
 
@@ -333,10 +345,9 @@ const App: React.FC = () => {
       const handler = setTimeout(() => {
         const workspaceId = userAuth.uid!;
         const docRef = doc(db, 'workspaces', workspaceId, 'modules', key);
-        // FIX: Sanitize data to remove 'undefined' which causes Firestore crash
         const payload = JSON.parse(JSON.stringify(Array.isArray(data) ? { data: data } : data));
         setDoc(docRef, payload, { merge: true }).catch(error => {
-            console.error(`Error saving ${key}:`, error);
+          console.error(`Error saving ${key}:`, error);
         });
       }, delay);
 
@@ -358,9 +369,9 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-        await signOut(auth);
-    } catch(e) {
-        console.error("Logout failed", e);
+      await signOut(auth);
+    } catch (e) {
+      console.error("Logout failed", e);
     }
   };
 
@@ -368,7 +379,7 @@ const App: React.FC = () => {
     setUserAuth(prev => ({ ...prev, accessLevel: 'full' }));
     setIsUserProfileModalOpen(false);
   };
-  
+
   const handleUpdateUserProfile = (profile: UserProfile) => {
     if (userAuth.uid) {
       setUserProfile(profile);
@@ -377,10 +388,29 @@ const App: React.FC = () => {
     }
   };
 
+  const handleTermsAccepted = async () => {
+    if (userAuth.uid) {
+      const updatedProfile: Partial<UserProfile> = {
+        termsAccepted: true,
+        termsAcceptedAt: new Date().toISOString()
+      };
+      try {
+        await updateDoc(doc(db, 'users', userAuth.uid), updatedProfile);
+        // Optimistically update local state to close modal immediately
+        if (userProfile) {
+          setUserProfile({ ...userProfile, ...updatedProfile });
+        }
+        setIsTermsModalOpen(false);
+      } catch (error) {
+        console.error("Error updating terms acceptance:", error);
+      }
+    }
+  };
+
   const handleSelectPage = (page: Page | null, subPage: SubPage | null) => {
     // New pages are accessible without login
     if ([
-      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS, 
+      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS,
       Page.PRIVACY, Page.TERMS, Page.SECURITY,
       Page.HELP_CENTER, Page.COMMUNITY, Page.DOCUMENTATION, Page.TEMPLATES,
       Page.ABOUT, Page.BLOG, Page.CAREERS, Page.CONTACT
@@ -400,14 +430,14 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     if (activePage === null || (activePage !== null && activeSubPage === null && ![
-      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS, 
+      Page.FEATURES, Page.TOOLS, Page.ROADMAP, Page.STARTUPS,
       Page.PRIVACY, Page.TERMS, Page.SECURITY,
       Page.HELP_CENTER, Page.COMMUNITY, Page.DOCUMENTATION, Page.TEMPLATES,
       Page.ABOUT, Page.BLOG, Page.CAREERS, Page.CONTACT
     ].includes(activePage))) {
       return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
-    
+
     // Public Pages
     if (activePage === Page.FEATURES) return <FeaturesPage onNavigate={handleSelectPage} />;
     if (activePage === Page.TOOLS) return <ToolsPage onNavigate={handleSelectPage} />;
@@ -416,7 +446,7 @@ const App: React.FC = () => {
     if (activePage === Page.PRIVACY) return <PrivacyPage onNavigate={handleSelectPage} />;
     if (activePage === Page.TERMS) return <TermsPage onNavigate={handleSelectPage} />;
     if (activePage === Page.SECURITY) return <SecurityPage onNavigate={handleSelectPage} />;
-    
+
     // Resources Pages
     if (activePage === Page.HELP_CENTER) return <HelpCenterPage onNavigate={handleSelectPage} />;
     if (activePage === Page.COMMUNITY) return <CommunityPage onNavigate={handleSelectPage} />;
@@ -431,35 +461,35 @@ const App: React.FC = () => {
 
     // Simple access check for restricted pages
     if (userAuth.isLoggedIn && userAuth.accessLevel !== 'full' && activePage !== Page.START) {
-         return <LockedFeature onUnlockClick={() => setIsUserProfileModalOpen(true)} t={t} />;
+      return <LockedFeature onUnlockClick={() => setIsUserProfileModalOpen(true)} t={t} />;
     }
-    
+
     if (!userAuth.isLoggedIn) {
       return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
     }
 
     switch (activePage) {
       case Page.START:
-        switch(activeSubPage) {
+        switch (activeSubPage) {
           case SubPage.MINDSET: return <MindsetPage initialData={mindsetData} onUpdateData={setMindsetData} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.STRATEGY: return <StrategyPage canvasData={canvasData} onSaveCanvasSection={(section, content) => setCanvasData(prev => ({...prev, [section]: content}))} onMassUpdateCanvas={(newData) => setCanvasData(prev => ({...prev, ...newData}))} personasData={personasData} onUpdatePersonasData={setPersonasData} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.STRATEGY: return <StrategyPage canvasData={canvasData} onSaveCanvasSection={(section, content) => setCanvasData(prev => ({ ...prev, [section]: content }))} onMassUpdateCanvas={(newData) => setCanvasData(prev => ({ ...prev, ...newData }))} personasData={personasData} onUpdatePersonasData={setPersonasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.RESEARCH: return <MarketResearchAccelerator initialData={marketResearchData} onUpdateData={setMarketResearchData} strategyData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.COPYWRITING: return <CopywritingPage initialData={copywritingData} onUpdateData={setCopywritingData} strategyData={canvasData} researchData={marketResearchData} personasData={personasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.BUILD:
-        switch(activeSubPage) {
+        switch (activeSubPage) {
           case SubPage.PRODUCT_DESIGN: return <ProductDesignPage initialData={productDesignData} onUpdateData={setProductDesignData} canvasData={canvasData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.ECONOMICS: return <EconomicsPage initialData={economicsData} onUpdateData={setEconomicsData} language={currentLanguage} t={t} userProfile={userProfile} />;
           case SubPage.SALES: return <SalesPage initialData={salesData} onUpdateData={setSalesData} canvasData={canvasData} personasData={personasData} researchData={marketResearchData} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       case Page.GROW:
-        switch(activeSubPage) {
-          case SubPage.LEGAL: return <LegalPage initialData={growData.legal} onUpdateData={d => setGrowData(p => ({...p, legal: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.INVESTMENT: return <InvestmentPage initialData={growData.investment} onUpdateData={d => setGrowData(p => ({...p, investment: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.MANAGEMENT: return <ManagementPage initialData={growData.management} onUpdateData={d => setGrowData(p => ({...p, management: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
-          case SubPage.CHECKLISTS: return <ChecklistsPage initialData={growData.checklists} onUpdateData={d => setGrowData(p => ({...p, checklists: d}))} language={currentLanguage} t={t} userProfile={userProfile} />;
+        switch (activeSubPage) {
+          case SubPage.LEGAL: return <LegalPage initialData={growData.legal} onUpdateData={d => setGrowData(p => ({ ...p, legal: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.INVESTMENT: return <InvestmentPage initialData={growData.investment} onUpdateData={d => setGrowData(p => ({ ...p, investment: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.MANAGEMENT: return <ManagementPage initialData={growData.management} onUpdateData={d => setGrowData(p => ({ ...p, management: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
+          case SubPage.CHECKLISTS: return <ChecklistsPage initialData={growData.checklists} onUpdateData={d => setGrowData(p => ({ ...p, checklists: d }))} language={currentLanguage} t={t} userProfile={userProfile} />;
           default: return <InfographicPage language={currentLanguage} t={t} onNavigate={handleSelectPage} />;
         }
       default:
@@ -484,16 +514,16 @@ const App: React.FC = () => {
         onLogout={handleLogout}
       />
       <main className="container mx-auto p-4 md:p-8 flex-grow">
-          {renderContent()}
+        {renderContent()}
       </main>
-      
+
       {isAuthModalOpen && (
-        <AuthPage 
-            isOpen={isAuthModalOpen} 
-            onClose={() => setIsAuthModalOpen(false)} 
-            onLoginSuccess={() => setIsAuthModalOpen(false)} 
-            t={t}
-            language={currentLanguage}
+        <AuthPage
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          onLoginSuccess={() => setIsAuthModalOpen(false)}
+          t={t}
+          language={currentLanguage}
         />
       )}
 
@@ -506,6 +536,16 @@ const App: React.FC = () => {
           t={t}
           accessLevel={userAuth.accessLevel}
           onUnlockSuccess={handleUnlockSuccess}
+        />
+      )}
+
+      {/* Terms Agreement Modal */}
+      {isTermsModalOpen && (
+        <TermsAgreementModal
+          isOpen={isTermsModalOpen}
+          onAccept={handleTermsAccepted}
+          t={t}
+          language={currentLanguage}
         />
       )}
     </HelmetProvider>

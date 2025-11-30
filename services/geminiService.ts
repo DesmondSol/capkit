@@ -1,3 +1,4 @@
+
 import { GenerateContentResponse, Part, Type } from "@google/genai";
 import {
     CanvasData,
@@ -30,7 +31,7 @@ import {
     OnePagerData,
     MarketingStrategy
 } from '../types';
-import { API_KEY_WARNING } from "../constants";
+import { API_KEY_WARNING } from "../../constants";
 
 // Note: GoogleGenAI type will be imported dynamically.
 type GoogleGenAI = any;
@@ -116,10 +117,14 @@ const callAi = async (prompt: string, jsonSchema?: any): Promise<string | null> 
 };
 
 export const generateBusinessCanvasContent = async (
-    businessIdea: string,
-    problemSolved: string,
-    targetCustomer: string,
-    uniqueSellingProposition: string,
+    inputs: {
+        concept: string;
+        problem: string;
+        customer: string;
+        advantage: string;
+        industry: string;
+        model: string;
+    },
     sections: CanvasSection[],
     language: Language
 ): Promise<Partial<CanvasData> | null> => {
@@ -128,17 +133,23 @@ export const generateBusinessCanvasContent = async (
         : "All generated content should be in English and be practical for an Ethiopian entrepreneur.";
 
     const prompt = `
-    You are an AI assistant helping an entrepreneur develop a business plan for Ethiopia.
+    You are an expert startup consultant helping an entrepreneur develop a business plan for Ethiopia.
     ${langInstructions}
 
-    Business Idea: ${businessIdea}
-    Problem Solved (in Ethiopian context): ${problemSolved}
-    Target Customer (Focus on Ethiopian demographics, psychographics, and cultural nuances): ${targetCustomer}
-    Unique Selling Proposition (for the Ethiopian market): ${uniqueSellingProposition}
+    **Startup Profile:**
+    - **Industry/Sector:** ${inputs.industry}
+    - **Business Model:** ${inputs.model}
+    - **Core Concept:** ${inputs.concept}
+    - **The Specific Problem (Pain Point):** ${inputs.problem}
+    - **Target Customer:** ${inputs.customer} (Focus on Ethiopian demographics, psychographics, and cultural nuances)
+    - **Unfair Advantage:** ${inputs.advantage}
 
-    Based on the above information, generate concise and actionable content for a Business Launch Canvas. All generated content MUST be highly relevant and contextualized for the Ethiopian business environment. Financial figures should implicitly relate to Ethiopian Birr (ETB). Market examples, competitor considerations, and business model suggestions should reflect local Ethiopian realities (e.g., infrastructure, logistics, payment systems like Telebirr).
+    Based on this specific profile, generate concise and actionable content for a Business Launch Canvas. 
+    All generated content MUST be highly relevant and contextualized for the Ethiopian business environment. 
+    Financial figures should implicitly relate to Ethiopian Birr (ETB). 
+    Market examples, competitor considerations, and business model suggestions should reflect local Ethiopian realities (e.g., infrastructure, logistics, payment systems like Telebirr/Chapa).
 
-    For each of the following sections, provide a practical description or strategy (2-4 sentences per section):
+    For each of the following sections, provide a practical strategy (2-4 sentences per section):
     ${sections.join("\n")} 
 
     Return the response as a valid JSON object where keys are the section names (exactly as provided in English) and values are the generated content strings (in ${language === 'am' ? 'Amharic' : 'English'}).

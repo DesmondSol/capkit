@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { CanvasSection, CanvasData, ALL_CANVAS_SECTIONS, CanvasSectionHelp, Language, UserProfile, TranslationKey } from '../../types';
 import { CANVAS_SECTIONS_HELP, GENERIC_ERROR_MESSAGE } from '../../constants';
@@ -76,8 +77,28 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
 
-  const [aiForm, setAiForm] = useState({ idea: '', q1: '', q2: '', q3: '' });
+  // Standardized Input State
+  const [aiForm, setAiForm] = useState({
+    industry: 'Technology',
+    model: 'Service',
+    concept: '',
+    problem: '',
+    customer: '',
+    advantage: ''
+  });
+
   const [error, setError] = useState<string | null>(null);
+
+  const INDUSTRIES = [
+    "Technology / SaaS", "AgriTech / Agriculture", "Fintech", "Health / Medical",
+    "Education / EdTech", "E-commerce / Retail", "Manufacturing", "Logistics / Transport",
+    "Real Estate / Construction", "Hospitality / Tourism", "Energy / CleanTech", "Creative / Media"
+  ];
+
+  const BUSINESS_MODELS = [
+    "Service Provider", "Product Sales (Physical)", "Subscription (Recurring)",
+    "Marketplace (Commission)", "Freemium", "Transactional", "Ad-Supported"
+  ];
 
   const handleExport = async () => {
     const { default: jsPDF } = await import('jspdf'); // Dynamic import
@@ -90,7 +111,7 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
 
     doc.setFontSize(TITLE_FONT_SIZE);
     doc.setFont("helvetica", "bold");
-    const mainTitleText = `CapKit - ${t('businessLaunchCanvas_title')}`;
+    const mainTitleText = `7set Spark - ${t('businessLaunchCanvas_title')}`;
     addTextWithPageBreaks(doc, mainTitleText, MARGIN_MM, yRef, {}, LINE_HEIGHT_TITLE, totalPagesRef, t);
 
     doc.setFontSize(10);
@@ -119,25 +140,22 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
   };
 
   const handleAiGenerate = async () => {
-    if (!aiForm.idea.trim()) {
-      setError(t('error_ai_no_idea'));
+    if (!aiForm.concept.trim() || !aiForm.problem.trim()) {
+      setError(t('mra_error_fill_all_fields'));
       return;
     }
     setIsLoadingAi(true);
     setError(null);
     try {
       const result = await generateBusinessCanvasContent(
-        aiForm.idea,
-        aiForm.q1,
-        aiForm.q2,
-        aiForm.q3,
+        aiForm,
         ALL_CANVAS_SECTIONS,
         language
       );
       if (result) {
         onMassUpdate(result);
         setIsAiModalOpen(false);
-        setAiForm({ idea: '', q1: '', q2: '', q3: '' });
+        // Don't reset form immediately so user can iterate if they open again
       } else {
         setError(t('error_ai_failed_generic'));
       }
@@ -149,9 +167,12 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
     }
   };
 
-  const handleAiInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleAiInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setAiForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
+
+  const inputBaseClasses = "w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400 text-sm";
+  const labelBaseClasses = "block text-sm font-medium text-slate-300 mb-1";
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem-2rem)] relative bg-transparent">
@@ -194,29 +215,55 @@ export const BusinessLaunchCanvas: React.FC<BusinessLaunchCanvasProps> = ({ canv
       />
 
       <Modal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} title={t('ai_assistant_modal_title_canvas')} size="xl">
+        <p className="text-sm text-slate-400 mb-6">
+          {language === 'am' ? 'ይህ AI የንግድ ሞዴልዎን ለማደራጀት ይረዳዎታል። ለተሻለ ውጤት፣ እባክዎ የሚከተሉትን ዝርዝሮች በትክክል ይሙሉ፡፡' : 'This AI assistant helps standardize your business inputs for the best possible canvas generation. Be specific!'}
+        </p>
+
         {error && <p className="text-red-400 bg-red-900/30 p-3 rounded-lg mb-4 text-sm">{error}</p>}
+
         <div className="space-y-5">
-          <div>
-            <label htmlFor="idea" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_idea_label')}</label>
-            <textarea id="idea" name="idea" rows={3} value={aiForm.idea} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_idea_placeholder')} />
+          {/* Structured Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="industry" className={labelBaseClasses}>{language === 'am' ? 'ኢንዱስትሪ / ዘርፍ' : 'Industry / Sector'}</label>
+              <select id="industry" name="industry" value={aiForm.industry} onChange={handleAiInputChange} className={inputBaseClasses}>
+                {INDUSTRIES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="model" className={labelBaseClasses}>{language === 'am' ? 'የንግድ ሞዴል' : 'Business Model Type'}</label>
+              <select id="model" name="model" value={aiForm.model} onChange={handleAiInputChange} className={inputBaseClasses}>
+                {BUSINESS_MODELS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
           </div>
+
           <div>
-            <label htmlFor="q1" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q1_label')}</label>
-            <input type="text" id="q1" name="q1" value={aiForm.q1} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q1_placeholder')} />
+            <label htmlFor="concept" className={labelBaseClasses}>{language === 'am' ? 'የንግድ ጽንሰ-ሀሳብ (አጭር መግለጫ)' : 'Business Concept (The "What")'}</label>
+            <input type="text" id="concept" name="concept" value={aiForm.concept} onChange={handleAiInputChange} className={inputBaseClasses} placeholder={t('ai_modal_idea_placeholder')} />
           </div>
+
           <div>
-            <label htmlFor="q2" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q2_label')}</label>
-            <input type="text" id="q2" name="q2" value={aiForm.q2} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q2_placeholder')} />
+            <label htmlFor="problem" className={labelBaseClasses}>{language === 'am' ? 'የሚፈቱት ችግር (ህመም ነጥብ)' : 'The Problem (The Pain Point)'}</label>
+            <textarea id="problem" name="problem" rows={2} value={aiForm.problem} onChange={handleAiInputChange} className={inputBaseClasses} placeholder={t('ai_modal_q1_placeholder')} />
           </div>
-          <div>
-            <label htmlFor="q3" className="block text-sm font-medium text-slate-300 mb-1">{t('ai_modal_q3_label')}</label>
-            <input type="text" id="q3" name="q3" value={aiForm.q3} onChange={handleAiInputChange} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder={t('ai_modal_q3_placeholder')} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="customer" className={labelBaseClasses}>{language === 'am' ? 'ዒላማ ደንበኛ (ማን?)' : 'Target Customer (The "Who")'}</label>
+              <input type="text" id="customer" name="customer" value={aiForm.customer} onChange={handleAiInputChange} className={inputBaseClasses} placeholder={t('ai_modal_q2_placeholder')} />
+            </div>
+            <div>
+              <label htmlFor="advantage" className={labelBaseClasses}>{language === 'am' ? 'ልዩ ጥቅም / ተወዳዳሪነት' : 'Unfair Advantage (The "How")'}</label>
+              <input type="text" id="advantage" name="advantage" value={aiForm.advantage} onChange={handleAiInputChange} className={inputBaseClasses} placeholder={t('ai_modal_q3_placeholder')} />
+            </div>
           </div>
-          <Button onClick={handleAiGenerate} disabled={isLoadingAi} className="w-full mt-2" variant="primary" size="lg">
+
+          <Button onClick={handleAiGenerate} disabled={isLoadingAi} className="w-full mt-4" variant="primary" size="lg">
             {isLoadingAi ? (
-              <SpinnerIcon className="h-5 w-5" />
+              <SpinnerIcon className="h-5 w-5 mr-2" />
             ) : (
-              <SparklesIcon className="h-5 w-5" />
+              <SparklesIcon className="h-5 w-5 mr-2" />
             )}
             {isLoadingAi ? t('ai_modal_generating_button_canvas') : t('ai_modal_generate_button_canvas')}
           </Button>
